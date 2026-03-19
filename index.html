@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多源固废协同焚烧 · 智能决策平台</title>
+    <title>多源污泥协同焚烧 · 智能决策平台</title>
     <!-- 字体与图标库 -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
@@ -17,97 +17,26 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', 'Microsoft YaHei', sans-serif;
             background: linear-gradient(145deg, #eaf7e1 0%, #d4e9d6 100%);
             color: #1e3e2c;
             line-height: 1.5;
+            padding: 20px;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
         }
 
-        /* 封面页样式 */
-        .cover {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #0f4f2e, #2d7a4b);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            transition: opacity 0.5s ease;
-            color: white;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .cover.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .cover h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            text-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        .cover p {
-            font-size: 1.3rem;
-            max-width: 700px;
-            margin-bottom: 2.5rem;
-            opacity: 0.9;
-        }
-
-        .cover .enter-btn {
-            background: white;
-            color: #0f4f2e;
-            border: none;
-            border-radius: 60px;
-            padding: 18px 50px;
-            font-size: 1.4rem;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .cover .enter-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-        }
-
-        .cover .bg-icon {
-            font-size: 6rem;
-            margin-bottom: 2rem;
-            opacity: 0.8;
-        }
-
-        /* 主界面（初始隐藏） */
         .dashboard {
             max-width: 1600px;
-            width: 100%;
+            margin: 0 auto;
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
             border-radius: 40px;
             padding: 30px;
             box-shadow: 0 25px 50px -12px rgba(0, 60, 30, 0.35);
             border: 1px solid rgba(110, 160, 120, 0.3);
-            display: none;
         }
 
-        .dashboard.visible {
-            display: block;
-        }
-
-        /* 头部区域 */
+        /* 头部 */
         .header {
             display: flex;
             justify-content: space-between;
@@ -124,13 +53,9 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            letter-spacing: -0.02em;
-            line-height: 1.2;
         }
 
-        .title-section .subtitle {
-            font-size: 1rem;
-            color: #2d5a3c;
+        .subtitle {
             background: #dcf0e3;
             padding: 6px 14px;
             border-radius: 40px;
@@ -140,42 +65,7 @@
             border: 1px solid #9dc0a5;
         }
 
-        .data-upload-area {
-            background: white;
-            border-radius: 60px;
-            padding: 8px 20px 8px 12px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            box-shadow: 0 8px 18px rgba(0,60,20,0.08);
-            border: 1px solid #bcddc4;
-        }
-
-        .upload-btn {
-            background: #2f855a;
-            color: white;
-            border: none;
-            border-radius: 40px;
-            padding: 12px 28px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.95rem;
-        }
-
-        .upload-btn:hover {
-            background: #276749;
-        }
-
-        .file-hint {
-            color: #3c6b4b;
-            font-size: 0.9rem;
-        }
-
-        /* 普适性选择栏：城市 + 固废类型 */
+        /* 普适性选择栏 */
         .universal-bar {
             display: flex;
             flex-wrap: wrap;
@@ -211,16 +101,7 @@
             font-size: 0.95rem;
             outline: none;
             padding: 8px 0;
-            min-width: 120px;
-        }
-
-        .region-tag {
-            background: #c7e5d4;
-            border-radius: 30px;
-            padding: 6px 18px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #175232;
+            min-width: 100px;
         }
 
         /* 流程卡片（可点击） */
@@ -261,7 +142,7 @@
         .flow-item h3 { font-size: 1rem; font-weight: 600; color: #0e4f2c; margin-bottom: 5px; }
         .flow-item p { font-size: 0.8rem; color: #3a6b4f; }
 
-        /* 主区域：输入面板 + 结果 */
+        /* 主区域：输入+输出 */
         .main-panel {
             display: grid;
             grid-template-columns: 1.2fr 1.8fr;
@@ -269,7 +150,7 @@
             margin-bottom: 30px;
         }
 
-        .input-card {
+        .input-card, .output-card {
             background: white;
             border-radius: 32px;
             padding: 24px;
@@ -277,7 +158,7 @@
             border: 1px solid #c0ddcb;
         }
 
-        .input-card h2 {
+        .input-card h2, .output-card h2 {
             font-size: 1.4rem;
             font-weight: 650;
             color: #0c4f2b;
@@ -340,35 +221,7 @@
         }
 
         .output-card {
-            background: white;
-            border-radius: 32px;
-            padding: 24px;
-            box-shadow: 0 12px 24px rgba(40, 100, 60, 0.1);
-            border: 1px solid #c0ddcb;
             position: relative;
-        }
-
-        .output-card h2 {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            color: #0c4f2b;
-        }
-
-        .detail-link {
-            background: #e2f0e8;
-            border-radius: 30px;
-            padding: 8px 18px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #1f6e4a;
-            cursor: pointer;
-            border: 1px solid #a0cfb5;
-            transition: 0.2s;
-        }
-        .detail-link:hover {
-            background: #c7e5d4;
         }
 
         .metric-grid {
@@ -414,6 +267,41 @@
             border-radius: 60px;
             font-weight: 700;
             font-size: 1.5rem;
+        }
+
+        /* 权重滑块区域 */
+        .weight-panel {
+            background: #e9f5ef;
+            border-radius: 32px;
+            padding: 18px 20px;
+            margin: 20px 0 15px;
+            border: 1px dashed #2f855a;
+        }
+        .weight-title {
+            font-weight: 600;
+            color: #0e4829;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        .weight-slider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .weight-slider label {
+            width: 100px;
+            font-size: 0.95rem;
+            color: #1e4b2f;
+        }
+        .weight-slider input {
+            flex: 1;
+        }
+        .weight-slider span {
+            width: 50px;
+            text-align: right;
+            font-weight: 600;
+            color: #0b4e2b;
         }
 
         .action-buttons {
@@ -471,28 +359,17 @@
             color: #175232;
             margin-bottom: 15px;
             font-weight: 600;
-            display: flex;
-            gap: 8px;
         }
 
-        /* 验证信息 (低调) */
+        /* 验证信息 */
         .validation-footer {
             margin-top: 30px;
             padding: 12px 20px;
             background: #d9ead9;
             border-radius: 60px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            font-size: 0.9rem;
+            text-align: center;
             color: #2d5a3c;
-            border: 1px solid #9ac7af;
         }
-        .validation-footer i { color: #1f6e4a; }
-
-        hr { border: 1px solid #b8dac7; margin: 20px 0; }
 
         .footer-note {
             text-align: center;
@@ -501,7 +378,7 @@
             margin-top: 20px;
         }
 
-        /* 模态框样式 */
+        /* 模态框 */
         .modal {
             display: none;
             position: fixed;
@@ -515,11 +392,9 @@
             justify-content: center;
             z-index: 2000;
         }
-
         .modal.show {
             display: flex;
         }
-
         .modal-content {
             background: white;
             border-radius: 40px;
@@ -532,7 +407,6 @@
             border: 2px solid #b2d3bb;
             position: relative;
         }
-
         .modal-content h2 {
             color: #0f4f2e;
             margin-bottom: 20px;
@@ -540,7 +414,6 @@
             align-items: center;
             gap: 10px;
         }
-
         .modal-close {
             position: absolute;
             top: 20px;
@@ -560,17 +433,14 @@
         .modal-close:hover {
             background: #c7e5d4;
         }
-
         .modal-body {
             margin-top: 15px;
         }
-
         .detail-chart {
             width: 100%;
             height: 250px;
             margin: 20px 0;
         }
-
         .param-table {
             width: 100%;
             border-collapse: collapse;
@@ -586,490 +456,466 @@
     </style>
 </head>
 <body>
-    <!-- 封面页 -->
-    <div class="cover" id="cover">
-        <div class="bg-icon"><i class="fas fa-recycle"></i></div>
-        <h1>多源固废协同焚烧<br>智能决策平台</h1>
-        <p>数据预处理 · 预测模型 · 多目标优化 · 可视化决策</p>
-        <button class="enter-btn" id="enterBtn">点击进入</button>
-    </div>
-
-    <!-- 主界面 -->
-    <div class="dashboard" id="dashboard">
-        <!-- 头部：普适性工具条 + 数据上传 -->
-        <div class="header">
-            <div class="title-section">
-                <h1>🌱 多源固废协同焚烧 · 智能决策平台</h1>
-                <div class="subtitle"><i class="fas-regular fa-arrows-spin"></i> 预知调控 · 多目标优化 · 强泛化能力</div>
-            </div>
-            <div class="data-upload-area">
-                <button class="upload-btn" id="uploadTrigger"><i class="fas fa-cloud-upload-alt"></i> 上传企业数据</button>
-                <span class="file-hint"><i class="fas fa-info-circle"></i> 支持 CSV / Excel</span>
-            </div>
+<div class="dashboard">
+    <!-- 头部 -->
+    <div class="header">
+        <div class="title-section">
+            <h1>🌱 多源污泥协同焚烧 · 智能决策平台</h1>
+            <div class="subtitle"><i class="fas-regular fa-arrows-spin"></i> 预知调控 · 多目标优化 · 强泛化能力</div>
         </div>
-
-        <!-- 普适性选择模块：城市 + 固废类型 -->
-        <div class="universal-bar">
-            <div class="selector-group">
-                <i class="fas fa-map-marker-alt"></i>
-                <select id="citySelect">
-                    <option value="北京">北京</option>
-                    <option value="上海" selected>上海</option>
-                    <option value="广州">广州</option>
-                    <option value="深圳">深圳</option>
-                    <option value="南京">南京</option>
-                    <option value="杭州">杭州</option>
-                    <option value="武汉">武汉</option>
-                    <option value="成都">成都</option>
-                    <option value="西安">西安</option>
-                    <option value="沈阳">沈阳</option>
-                </select>
-            </div>
-            <div class="selector-group">
-                <i class="fas fa-dumpster"></i>
-                <select id="wasteTypeSelect">
-                    <option value="市政污泥">市政污泥</option>
-                    <option value="工业固废">工业固废</option>
-                    <option value="多种混合">多种混合</option>
-                    <option value="印染污泥">印染污泥</option>
-                    <option value="造纸废渣">造纸废渣</option>
-                </select>
-            </div>
-            <div class="region-tag"><i class="far fa-building"></i> 当前城市基准：上海 · 市政污泥典型特性</div>
-        </div>
-
-        <!-- 流程卡片（可点击进入详细分析） -->
-        <div class="flow-grid">
-            <div class="flow-item" data-module="preprocess">
-                <div class="icon"><i class="fas fa-database"></i></div>
-                <h3>数据预处理</h3>
-                <p>异常剔除 · 填补 · 滤波</p>
-            </div>
-            <div class="flow-item" data-module="predict">
-                <div class="icon"><i class="fas fa-chart-line"></i></div>
-                <h3>预测模型</h3>
-                <p>成分 · 排放 · 能耗</p>
-            </div>
-            <div class="flow-item" data-module="optimize">
-                <div class="icon"><i class="fas fa-square-root-variable"></i></div>
-                <h3>多目标优化</h3>
-                <p>NSGA-II · 帕累托前沿</p>
-            </div>
-            <div class="flow-item" data-module="visual">
-                <div class="icon"><i class="fas fa-desktop"></i></div>
-                <h3>可视化决策</h3>
-                <p>运行策略 · 实时看板</p>
-            </div>
-        </div>
-
-        <!-- 主交互面板：输入+输出 -->
-        <div class="main-panel">
-            <!-- 左侧输入区：可手动调整参数，模拟真实数据导入 -->
-            <div class="input-card">
-                <h2><i class="fas fa-sliders-h"></i> 关键参数输入</h2>
-                <div class="param-slider">
-                    <label>掺烧比例 <span id="mixVal">8.2%</span></label>
-                    <input type="range" id="mixSlider" min="0" max="20" value="8.2" step="0.1">
-                </div>
-                <div class="param-slider">
-                    <label>污泥含水率 <span id="moistVal">34%</span></label>
-                    <input type="range" id="moistSlider" min="15" max="55" value="34" step="0.5">
-                </div>
-                <div class="param-slider">
-                    <label>入炉热值 <span id="heatVal">2950 kJ/kg</span></label>
-                    <input type="range" id="heatSlider" min="1800" max="4200" value="2950" step="10">
-                </div>
-                <div class="extra-input">
-                    <div class="input-badge"><i class="fas fa-flask"></i> 挥发分 <input type="number" id="volatile" value="38" step="1" min="20" max="60"> %</div>
-                    <div class="input-badge"><i class="fas fa-ash"></i> 灰分 <input type="number" id="ash" value="32" step="1" min="15" max="50"> %</div>
-                </div>
-                <div style="margin-top:20px;">
-                    <p style="color:#2d6e48;"><i class="fas fa-upload"></i> 或直接上传企业真实数据（模拟）：</p>
-                    <input type="file" id="fakeUpload" accept=".csv, .xlsx" style="margin-top:8px;">
-                </div>
-            </div>
-
-            <!-- 右侧输出区：预测+优化结果 -->
-            <div class="output-card">
-                <h2>
-                    <span><i class="fas fa-chart-pie"></i> 实时预测与优化建议</span>
-                    <span class="detail-link" id="outputDetailBtn"><i class="fas fa-chart-simple"></i> 详细分析</span>
-                </h2>
-                <div class="metric-grid">
-                    <div class="metric-box"><span class="value" id="preEff">91.3</span><span class="unit">%</span><div class="label">锅炉效率</div></div>
-                    <div class="metric-box"><span class="value" id="preNOx">175</span><span class="unit">mg/m³</span><div class="label">NOx 排放</div></div>
-                    <div class="metric-box"><span class="value" id="preCO2">0.82</span><span class="unit">t/t</span><div class="label">单位碳排</div></div>
-                    <div class="metric-box"><span class="value" id="preCost">236.5</span><span class="unit">元/吨</span><div class="label">运行成本</div></div>
-                </div>
-                <div class="recommend-bar">
-                    <span class="recommend-text"><i class="fas fa-bullseye"></i> 推荐掺烧比</span>
-                    <span class="badge-opt" id="optRatio">8.2%</span>
-                </div>
-                <div class="recommend-bar" style="background:#cbe9db; margin-top:0;">
-                    <span class="recommend-text"><i class="fas fa-tachometer-alt"></i> 优化运行参数</span>
-                    <span style="font-weight:600;" id="optParams">一次风配比 62:38</span>
-                </div>
-                <div class="action-buttons">
-                    <button class="btn-primary" id="runOptimBtn"><i class="fas fa-play"></i> 执行多目标优化</button>
-                    <button class="btn-secondary" id="resetBtn"><i class="fas fa-redo-alt"></i> 重置</button>
-                </div>
-                <p style="margin-top:15px; color:#3a6f52; font-size:0.85rem;"><i class="fas-regular fa-lightbulb"></i> 基于NSGA-II算法，兼顾能耗、排放与成本</p>
-            </div>
-        </div>
-
-        <!-- 图表区域：污染物排放预测 + 帕累托前沿（实时更新） -->
-        <div class="charts-row">
-            <div class="chart-card">
-                <h3><i class="fas fa-wave-square" style="color:#1f6e4a;"></i> 污染物排放预测 (随掺比变化)</h3>
-                <div id="pollutantChart" style="width:100%; height:240px;"></div>
-            </div>
-            <div class="chart-card">
-                <h3><i class="fas fa-arrows-spin" style="color:#1f6e4a;"></i> 多目标帕累托前沿 (成本 vs 排放)</h3>
-                <div id="paretoChart" style="width:100%; height:240px;"></div>
-            </div>
-        </div>
-
-        <!-- 低调的验证信息 -->
-        <div class="validation-footer">
-            <i class="fas fa-check-circle"></i> 本模型已通过国能神福（龙岩）发电厂 / 马鞍山项目真实数据回溯验证，误差≤3%
-            <i class="fas fa-flask"></i> 模型具备强泛化能力，可迁移至不同城市/固废类型
-        </div>
-
-        <hr>
-        <div class="footer-note">
-            ⚙️ 平台核心：数据预处理 → 预测模型(LSTM/随机森林) → 多目标优化(NSGA-II) → 可视化决策<br>
-            支持企业数据导入，输出最佳运行策略，助力节能降碳 & 稳定焚烧
+        <div>
+            <button class="upload-btn" style="background:#2f855a; color:white; border:none; border-radius:40px; padding:12px 28px;"><i class="fas fa-cloud-upload-alt"></i> 上传企业数据</button>
         </div>
     </div>
 
-    <!-- 通用模态框（详细分析） -->
-    <div class="modal" id="detailModal">
-        <div class="modal-content">
-            <span class="modal-close" id="modalClose">&times;</span>
-            <h2 id="modalTitle"><i class="fas fa-chart-bar"></i> 详细分析</h2>
-            <div class="modal-body" id="modalBody">
-                <!-- 动态内容由JavaScript填充 -->
-            </div>
+    <!-- 普适性选择栏 -->
+    <div class="universal-bar">
+        <div class="selector-group">
+            <i class="fas fa-map-marker-alt"></i>
+            <select id="citySelect">
+                <option value="上海" selected>上海</option>
+                <option value="北京">北京</option>
+                <option value="广州">广州</option>
+                <option value="深圳">深圳</option>
+                <option value="南京">南京</option>
+                <option value="杭州">杭州</option>
+            </select>
+        </div>
+        <div class="selector-group">
+            <i class="fas fa-dumpster"></i>
+            <select id="wasteTypeSelect">
+                <option value="市政污泥">市政污泥</option>
+                <option value="工业污泥">工业污泥</option>
+                <option value="印染污泥">印染污泥</option>
+                <option value="造纸污泥">造纸污泥</option>
+            </select>
         </div>
     </div>
 
-    <script>
-        (function() {
-            // 封面进入按钮
-            const cover = document.getElementById('cover');
-            const dashboard = document.getElementById('dashboard');
-            document.getElementById('enterBtn').addEventListener('click', function() {
-                cover.classList.add('hidden');
-                dashboard.classList.add('visible');
+    <!-- 流程卡片（可点击弹出模态框） -->
+    <div class="flow-grid">
+        <div class="flow-item" data-module="preprocess">
+            <div class="icon"><i class="fas fa-database"></i></div>
+            <h3>数据预处理</h3>
+            <p>异常剔除 · 填补 · 滤波</p>
+        </div>
+        <div class="flow-item" data-module="predict">
+            <div class="icon"><i class="fas fa-chart-line"></i></div>
+            <h3>预测模型</h3>
+            <p>成分 · 排放 · 能耗</p>
+        </div>
+        <div class="flow-item" data-module="optimize">
+            <div class="icon"><i class="fas fa-square-root-variable"></i></div>
+            <h3>多目标优化</h3>
+            <p>NSGA-II · 帕累托前沿</p>
+        </div>
+        <div class="flow-item" data-module="visual">
+            <div class="icon"><i class="fas fa-desktop"></i></div>
+            <h3>可视化决策</h3>
+            <p>运行策略 · 实时看板</p>
+        </div>
+    </div>
+
+    <!-- 主交互面板 -->
+    <div class="main-panel">
+        <!-- 左侧输入区 -->
+        <div class="input-card">
+            <h2><i class="fas fa-sliders-h"></i> 关键参数输入</h2>
+            <div class="param-slider">
+                <label>掺烧比例 <span id="mixVal">8.2%</span></label>
+                <input type="range" id="mixSlider" min="0" max="15" value="8.2" step="0.1">
+            </div>
+            <div class="param-slider">
+                <label>污泥含水率 <span id="moistVal">34%</span></label>
+                <input type="range" id="moistSlider" min="15" max="55" value="34" step="0.5">
+            </div>
+            <div class="param-slider">
+                <label>入炉热值 <span id="heatVal">2950 kJ/kg</span></label>
+                <input type="range" id="heatSlider" min="1800" max="4200" value="2950" step="10">
+            </div>
+            <div class="extra-input">
+                <div class="input-badge"><i class="fas fa-flask"></i> 挥发分 <input type="number" id="volatile" value="38" step="1" min="20" max="60"> %</div>
+                <div class="input-badge"><i class="fas fa-ash"></i> 灰分 <input type="number" id="ash" value="32" step="1" min="15" max="50"> %</div>
+            </div>
+            <div style="margin-top:20px;">
+                <p style="color:#2d6e48;"><i class="fas fa-upload"></i> 上传历史数据（模拟）</p>
+                <input type="file" id="fakeUpload" accept=".csv, .xlsx" style="margin-top:8px;">
+            </div>
+        </div>
+
+        <!-- 右侧输出区 -->
+        <div class="output-card">
+            <h2><i class="fas fa-chart-pie"></i> 实时预测与优化建议</h2>
+            <div class="metric-grid">
+                <div class="metric-box"><span class="value" id="preEff">91.3</span><span class="unit">%</span><div class="label">锅炉效率</div></div>
+                <div class="metric-box"><span class="value" id="preNOx">175</span><span class="unit">mg/m³</span><div class="label">NOx 排放</div></div>
+                <div class="metric-box"><span class="value" id="preCO2">0.82</span><span class="unit">t/t</span><div class="label">单位碳排</div></div>
+                <div class="metric-box"><span class="value" id="preCost">236.5</span><span class="unit">元/吨</span><div class="label">运行成本</div></div>
+            </div>
+
+            <!-- 权重设置面板（新增） -->
+            <div class="weight-panel">
+                <div class="weight-title"><i class="fas fa-balance-scale"></i> 权重偏好设置 (拖动滑块调整权重)</div>
+                <div class="weight-slider">
+                    <label>NOx 排放权重</label>
+                    <input type="range" id="weightNox" min="0" max="1" step="0.01" value="0.33">
+                    <span id="weightNoxVal">0.33</span>
+                </div>
+                <div class="weight-slider">
+                    <label>运行成本权重</label>
+                    <input type="range" id="weightCost" min="0" max="1" step="0.01" value="0.33">
+                    <span id="weightCostVal">0.33</span>
+                </div>
+                <div class="weight-slider">
+                    <label>锅炉效率权重</label>
+                    <input type="range" id="weightEff" min="0" max="1" step="0.01" value="0.34">
+                    <span id="weightEffVal">0.34</span>
+                </div>
+                <div style="text-align:right; color:#2d6e48; font-size:0.9rem; margin-top:5px;">权重总和: <span id="weightSum">1.00</span></div>
+            </div>
+
+            <div class="recommend-bar">
+                <span class="recommend-text"><i class="fas fa-bullseye"></i> 推荐掺烧比 (加权)</span>
+                <span class="badge-opt" id="optRatio">8.2%</span>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-primary" id="runOptimBtn"><i class="fas fa-play"></i> 执行多目标优化</button>
+                <button class="btn-secondary" id="resetBtn"><i class="fas fa-redo-alt"></i> 重置参数</button>
+            </div>
+            <p style="margin-top:15px; color:#3a6f52; font-size:0.85rem;"><i class="fas-regular fa-lightbulb"></i> 根据权重自动从帕累托前沿选取最佳折中解</p>
+        </div>
+    </div>
+
+    <!-- 图表展示 -->
+    <div class="charts-row">
+        <div class="chart-card">
+            <h3><i class="fas fa-wave-square" style="color:#1f6e4a;"></i> 污染物排放预测 (随掺比变化)</h3>
+            <div id="pollChart" style="width:100%; height:240px;"></div>
+        </div>
+        <div class="chart-card">
+            <h3><i class="fas fa-arrows-spin" style="color:#1f6e4a;"></i> 多目标帕累托前沿 (成本 vs 排放)</h3>
+            <div id="pareChart" style="width:100%; height:240px;"></div>
+        </div>
+    </div>
+
+    <!-- 验证信息 -->
+    <div class="validation-footer">
+        <i class="fas fa-check-circle"></i> 依托龙岩电厂、马鞍山电厂真实数据验证 · 模型误差≤3%
+    </div>
+    <div class="footer-note">
+        ⚙️ 核心：数据预处理 → 预测模型(LSTM/随机森林) → 多目标优化(NSGA-II) → 可视化决策
+    </div>
+</div>
+
+<!-- 通用模态框 -->
+<div class="modal" id="detailModal">
+    <div class="modal-content">
+        <span class="modal-close" id="modalClose">&times;</span>
+        <h2 id="modalTitle"><i class="fas fa-chart-bar"></i> 详细分析</h2>
+        <div class="modal-body" id="modalBody">
+            <!-- 动态填充内容 -->
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- DOM 元素 ----------
+        const mixSlider = document.getElementById('mixSlider');
+        const moistSlider = document.getElementById('moistSlider');
+        const heatSlider = document.getElementById('heatSlider');
+        const mixVal = document.getElementById('mixVal');
+        const moistVal = document.getElementById('moistVal');
+        const heatVal = document.getElementById('heatVal');
+        const volatileInput = document.getElementById('volatile');
+        const ashInput = document.getElementById('ash');
+        const citySelect = document.getElementById('citySelect');
+        const wasteSelect = document.getElementById('wasteTypeSelect');
+
+        const preEff = document.getElementById('preEff');
+        const preNOx = document.getElementById('preNOx');
+        const preCO2 = document.getElementById('preCO2');
+        const preCost = document.getElementById('preCost');
+        const optRatio = document.getElementById('optRatio');
+
+        // 权重滑块
+        const weightNox = document.getElementById('weightNox');
+        const weightCost = document.getElementById('weightCost');
+        const weightEff = document.getElementById('weightEff');
+        const weightNoxVal = document.getElementById('weightNoxVal');
+        const weightCostVal = document.getElementById('weightCostVal');
+        const weightEffVal = document.getElementById('weightEffVal');
+        const weightSumSpan = document.getElementById('weightSum');
+
+        // 图表实例
+        let pollChart, pareChart;
+        // 存储模拟的帕累托解集 (20个解)
+        let paretoSolutions = [];
+
+        // ---------- 初始化图表 ----------
+        function initCharts() {
+            pollChart = echarts.init(document.getElementById('pollChart'));
+            pareChart = echarts.init(document.getElementById('pareChart'));
+
+            // 污染物趋势图（静态示例）
+            pollChart.setOption({
+                tooltip: { trigger: 'axis' },
+                legend: { bottom: 5, data: ['NOx', 'SO₂'] },
+                grid: { left: '12%', right: '8%', top: '15%', bottom: '20%', containLabel: true },
+                xAxis: { type: 'category', data: ['0%', '4%', '8%', '12%', '16%', '20%'], name: '掺烧比例' },
+                yAxis: { type: 'value', name: '浓度 (mg/m³)', min: 0, max: 250 },
+                series: [
+                    { name: 'NOx', type: 'line', data: [160, 168, 175, 186, 198, 215], color: '#2f855a', smooth: true },
+                    { name: 'SO₂', type: 'line', data: [200, 205, 212, 220, 232, 245], color: '#d97706', smooth: true }
+                ]
             });
 
-            // DOM 元素
-            const mixSlider = document.getElementById('mixSlider');
-            const moistSlider = document.getElementById('moistSlider');
-            const heatSlider = document.getElementById('heatSlider');
-            const mixVal = document.getElementById('mixVal');
-            const moistVal = document.getElementById('moistVal');
-            const heatVal = document.getElementById('heatVal');
-            const volatileInput = document.getElementById('volatile');
-            const ashInput = document.getElementById('ash');
-
-            const preEff = document.getElementById('preEff');
-            const preNOx = document.getElementById('preNOx');
-            const preCO2 = document.getElementById('preCO2');
-            const preCost = document.getElementById('preCost');
-            const optRatio = document.getElementById('optRatio');
-            const optParams = document.getElementById('optParams');
-
-            const citySelect = document.getElementById('citySelect');
-            const wasteTypeSelect = document.getElementById('wasteTypeSelect');
-
-            // 图表实例
-            let pollChart = null;
-            let paretoChart = null;
-
-            // 城市影响因子映射（基于城市所在区域或实际数据模拟）
-            const cityFactorMap = {
-                '北京': 0.98,
-                '上海': 1.0,
-                '广州': 1.05,
-                '深圳': 1.06,
-                '南京': 1.02,
-                '杭州': 1.01,
-                '武汉': 1.03,
-                '成都': 1.0,
-                '西安': 0.97,
-                '沈阳': 0.95
-            };
-
-            // 固废类型影响因子
-            const wasteFactorMap = {
-                '市政污泥': 1.0,
-                '工业固废': 1.12,
-                '多种混合': 1.07,
-                '印染污泥': 1.15,
-                '造纸废渣': 1.03
-            };
-
-            // 更新所有预测数值及图表
-            function updateAll() {
-                // 获取当前输入值
-                let mix = parseFloat(mixSlider.value);
-                let moist = parseFloat(moistSlider.value);
-                let heat = parseFloat(heatSlider.value);
-                let volatile = parseFloat(volatileInput.value) || 38;
-                let ash = parseFloat(ashInput.value) || 32;
-                let city = citySelect.value;
-                let waste = wasteTypeSelect.value;
-
-                let cityFactor = cityFactorMap[city] || 1.0;
-                let wasteFactor = wasteFactorMap[waste] || 1.0;
-
-                // 更新右侧数值预测 (沿用之前的模型)
-                let eff = 93.5 - 0.14 * mix - 0.06 * (moist - 30) * (mix/6) - 0.002 * (3000 - heat) * (mix/8);
-                eff = Math.min(95, Math.max(86, eff)).toFixed(1);
-
-                let nox = 160 + 2.5 * mix + 0.7 * (moist - 30) - 0.03 * (heat - 2800) + (wasteFactor-1)*20 + (cityFactor-1)*15;
-                nox = Math.min(280, Math.max(130, nox)).toFixed(0);
-
-                let co2 = 0.78 + 0.012 * mix - 0.0001 * (heat - 2500) + 0.002 * (moist - 30);
-                co2 = (co2 * cityFactor).toFixed(2);
-
-                let cost = 220 + 2.2 * mix + 0.8 * (moist - 25) - 0.05 * (heat - 2500) + (wasteFactor-1)*15;
-                cost = cost.toFixed(1);
-
-                let opt = 7.5 + 0.02 * (heat - 2800)/10 - 0.1 * (moist - 32) + (cityFactor-1)*0.5 + (wasteFactor-1)*0.3;
-                opt = Math.min(12, Math.max(5, opt)).toFixed(1);
-
-                let airRatio = "62:38";
-                if (mix > 10) airRatio = "58:42";
-                else if (mix < 5) airRatio = "65:35";
-
-                preEff.innerText = eff;
-                preNOx.innerText = nox;
-                preCO2.innerText = co2;
-                preCost.innerText = cost;
-                optRatio.innerText = opt + '%';
-                optParams.innerText = '一次风配比 ' + airRatio;
-
-                mixVal.innerText = mix + '%';
-                moistVal.innerText = moist + '%';
-                heatVal.innerText = heat + ' kJ/kg';
-
-                // 更新图表
-                updateCharts(mix, moist, heat, volatile, ash, cityFactor, wasteFactor);
+            // 生成模拟帕累托解集（20个点，每个解包含：掺烧比, NOx, 成本, 效率）
+            paretoSolutions = [];
+            for (let i = 0; i < 20; i++) {
+                let mix = 5 + Math.random() * 8;          // 5~13%
+                let nox = 150 + Math.random() * 40;       // 150~190
+                let cost = 210 + Math.random() * 40;       // 210~250
+                let eff = 90 + Math.random() * 4;          // 90~94%
+                paretoSolutions.push({ mix, nox, cost, eff });
             }
+            // 按成本排序，使帕累托前沿更明显（实际应是非支配排序，这里简化）
+            paretoSolutions.sort((a,b) => a.cost - b.cost);
+            // 绘制帕累托散点图
+            const scatterData = paretoSolutions.map(p => [p.cost, p.nox]);
+            pareChart.setOption({
+                tooltip: { trigger: 'item', formatter: '成本: {c[0]} 元/吨<br>NOx: {c[1]} mg/m³' },
+                grid: { left: '12%', right: '8%', top: '10%', bottom: '15%' },
+                xAxis: { type: 'value', name: '运行成本 (元/吨)' },
+                yAxis: { type: 'value', name: 'NOx排放 (mg/m³)' },
+                series: [{
+                    type: 'scatter',
+                    data: scatterData,
+                    symbolSize: 8,
+                    itemStyle: { color: '#2f855a' }
+                }]
+            });
+        }
 
-            // 更新两个图表（基于当前参数）
-            function updateCharts(mix, moist, heat, volatile, ash, cityFactor, wasteFactor) {
-                if (!pollChart) {
-                    pollChart = echarts.init(document.getElementById('pollutantChart'));
-                    paretoChart = echarts.init(document.getElementById('paretoChart'));
+        // ---------- 根据权重从帕累托解集中选出最优解 ----------
+        function selectBestByWeights() {
+            // 获取权重值
+            let wNox = parseFloat(weightNox.value);
+            let wCost = parseFloat(weightCost.value);
+            let wEff = parseFloat(weightEff.value);
+            // 归一化权重（确保总和为1）
+            let sum = wNox + wCost + wEff;
+            if (sum === 0) sum = 1;
+            wNox /= sum; wCost /= sum; wEff /= sum;
+
+            // 对每个解计算加权得分（需将指标归一化到0~1之间，这里简单采用线性归一化）
+            let minNox = Math.min(...paretoSolutions.map(p => p.nox));
+            let maxNox = Math.max(...paretoSolutions.map(p => p.nox));
+            let minCost = Math.min(...paretoSolutions.map(p => p.cost));
+            let maxCost = Math.max(...paretoSolutions.map(p => p.cost));
+            let minEff = Math.min(...paretoSolutions.map(p => p.eff));
+            let maxEff = Math.max(...paretoSolutions.map(p => p.eff));
+
+            let best = null;
+            let bestScore = -Infinity;
+
+            paretoSolutions.forEach(p => {
+                // 归一化：排放和成本越小越好，效率越大越好
+                let noxNorm = (maxNox - p.nox) / (maxNox - minNox || 1);
+                let costNorm = (maxCost - p.cost) / (maxCost - minCost || 1);
+                let effNorm = (p.eff - minEff) / (maxEff - minEff || 1);
+                let score = wNox * noxNorm + wCost * costNorm + wEff * effNorm;
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = p;
                 }
+            });
+            return best;
+        }
 
-                // --- 污染物排放预测图：NOx 和 SO₂ 随掺烧比例的变化曲线（模拟）---
-                const mixPoints = [0, 4, 8, 12, 16, 20]; // 掺烧比例（%）
-                // 基准NOx、SO₂（基于当前参数调整）
-                let baseNOx = 160 + 0.7 * (moist - 30) - 0.03 * (heat - 2800) + (wasteFactor-1)*20 + (cityFactor-1)*15;
-                let baseSO2 = 200 + 0.5 * (moist - 30) - 0.02 * (heat - 2800) + (wasteFactor-1)*15 + (cityFactor-1)*10;
-                let noxData = mixPoints.map(p => {
-                    let val = baseNOx + 2.2 * p; // 随掺比增加而增加
-                    return Math.min(280, Math.max(130, val));
-                });
-                let so2Data = mixPoints.map(p => {
-                    let val = baseSO2 + 1.8 * p;
-                    return Math.min(300, Math.max(170, val));
-                });
+        // ---------- 更新预测显示（模拟后端，实际可调用fetch）----------
+        async function updatePredictions() {
+            // 显示滑块值
+            mixVal.innerText = mixSlider.value + '%';
+            moistVal.innerText = moistSlider.value + '%';
+            heatVal.innerText = heatSlider.value + ' kJ/kg';
 
-                pollChart.setOption({
-                    tooltip: { trigger: 'axis' },
-                    legend: { bottom: 0, data: ['NOx', 'SO₂'] },
-                    grid: { left: '8%', right: '5%', top: 15, bottom: 30, containLabel: true },
-                    xAxis: { type: 'category', data: ['0%', '4%', '8%', '12%', '16%', '20%'], name: '掺烧比例' },
-                    yAxis: { type: 'value', name: 'mg/m³' },
-                    series: [
-                        { name: 'NOx', type: 'line', smooth: true, data: noxData, lineStyle: { color: '#2f855a', width: 3 } },
-                        { name: 'SO₂', type: 'line', smooth: true, data: so2Data, lineStyle: { color: '#d97706', width: 3 } }
-                    ]
-                });
-
-                // --- 帕累托前沿散点图（模拟优化解集，受当前参数影响）---
-                // 成本范围（元/吨）和排放范围（mg/m³）根据当前参数动态变化
-                let costBase = parseFloat(preCost.innerText) || 220;
-                let noxBase = parseFloat(preNOx.innerText) || 160;
-                let costRange = [costBase * 0.85, costBase * 1.15];
-                let noxRange = [noxBase * 0.8, noxBase * 1.2];
-                let paretoData = [];
-                for (let i = 0; i < 30; i++) {
-                    let cost = costRange[0] + Math.random() * (costRange[1] - costRange[0]);
-                    let emission = noxRange[0] + Math.random() * (noxRange[1] - noxRange[0]);
-                    paretoData.push([cost, emission]);
-                }
-                paretoChart.setOption({
-                    tooltip: { trigger: 'item' },
-                    grid: { left: '10%', right: '8%', top: 20, bottom: 25 },
-                    xAxis: { type: 'value', name: '运行成本 (元/吨)' },
-                    yAxis: { type: 'value', name: 'NOx排放 (mg/m³)' },
-                    series: [{
-                        type: 'scatter',
-                        data: paretoData,
-                        symbolSize: 8,
-                        itemStyle: { color: '#2f855a' }
-                    }]
-                });
+            // 模拟获取当前工况下的一组帕累托解（实际应由后端根据参数生成）
+            // 为了演示，我们稍微修改一下帕累托解集，让结果随输入变化
+            paretoSolutions = [];
+            let baseMix = parseFloat(mixSlider.value);
+            let baseMoist = parseFloat(moistSlider.value);
+            for (let i = 0; i < 20; i++) {
+                let mix = baseMix - 2 + Math.random() * 4;          // 在设定值附近波动
+                if (mix < 3) mix = 3; if (mix > 14) mix = 14;
+                let nox = 150 + 2 * baseMix + 0.5 * baseMoist + Math.random() * 20;
+                let cost = 210 + 1.5 * baseMix + 0.3 * baseMoist + Math.random() * 20;
+                let eff = 91 + 0.2 * baseMix - 0.1 * baseMoist + Math.random() * 2;
+                paretoSolutions.push({ mix, nox, cost, eff });
             }
-
-            // 绑定事件：所有输入变化都触发updateAll
-            [mixSlider, moistSlider, heatSlider].forEach(s => s.addEventListener('input', updateAll));
-            volatileInput.addEventListener('input', updateAll);
-            ashInput.addEventListener('input', updateAll);
-            citySelect.addEventListener('change', updateAll);
-            wasteTypeSelect.addEventListener('change', updateAll);
-
-            // 初始化时调用一次
-            updateAll();
-
-            // 优化按钮模拟
-            document.getElementById('runOptimBtn').addEventListener('click', function() {
-                alert('多目标优化(NSGA-II)计算完成，已更新推荐掺烧比及运行参数。');
-                let currentOpt = parseFloat(optRatio.innerText);
-                let newOpt = (currentOpt + 0.2).toFixed(1);
-                if (newOpt > 12) newOpt = 7.8;
-                optRatio.innerText = newOpt + '%';
-                preCost.innerText = (parseFloat(preCost.innerText) - 2.3).toFixed(1);
-                // 图表也要相应更新
-                updateAll();
+            paretoSolutions.sort((a,b) => a.cost - b.cost);
+            // 更新帕累托图
+            pareChart.setOption({
+                series: [{
+                    data: paretoSolutions.map(p => [p.cost, p.nox])
+                }]
             });
 
-            // 重置按钮
-            document.getElementById('resetBtn').addEventListener('click', function() {
-                mixSlider.value = 8.2;
-                moistSlider.value = 34;
-                heatSlider.value = 2950;
-                volatileInput.value = 38;
-                ashInput.value = 32;
-                citySelect.value = '上海';
-                wasteTypeSelect.value = '市政污泥';
-                updateAll();
-            });
-
-            // 上传数据模拟
-            document.getElementById('uploadTrigger').addEventListener('click', function() {
-                alert('演示模式：实际应用中，将解析上传的企业数据并自动填充参数。');
-            });
-            document.getElementById('fakeUpload').addEventListener('change', function(e) {
-                if (e.target.files.length > 0) {
-                    alert('演示模式：已模拟读取文件 "' + e.target.files[0].name + '"，参数已更新。');
-                    mixSlider.value = (6 + Math.random()*5).toFixed(1);
-                    moistSlider.value = (30 + Math.random()*10).toFixed(0);
-                    heatSlider.value = (2700 + Math.random()*500).toFixed(0);
-                    volatileInput.value = (35 + Math.random()*10).toFixed(0);
-                    ashInput.value = (28 + Math.random()*8).toFixed(0);
-                    updateAll();
-                }
-            });
-
-            // 模态框相关逻辑（略，与之前相同）
-            const modal = document.getElementById('detailModal');
-            const modalClose = document.getElementById('modalClose');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalBody = document.getElementById('modalBody');
-
-            function showModal(title, contentGenerator) {
-                modalTitle.innerHTML = `<i class="fas fa-chart-bar"></i> ${title}`;
-                modalBody.innerHTML = '';
-                const chartDiv = document.createElement('div');
-                chartDiv.id = 'modalChart';
-                chartDiv.className = 'detail-chart';
-                modalBody.appendChild(chartDiv);
-                const table = document.createElement('table');
-                table.className = 'param-table';
-                table.id = 'modalTable';
-                modalBody.appendChild(table);
-                contentGenerator(chartDiv, table);
-                modal.classList.add('show');
+            // 根据当前权重选择最佳解
+            let best = selectBestByWeights();
+            if (best) {
+                optRatio.innerText = best.mix.toFixed(1) + '%';
+                preEff.innerText = best.eff.toFixed(1);
+                preNOx.innerText = best.nox.toFixed(0);
+                preCost.innerText = best.cost.toFixed(1);
+                // 单位碳排暂时模拟
+                preCO2.innerText = (0.75 + Math.random()*0.1).toFixed(2);
+            } else {
+                optRatio.innerText = '8.2%';
+                preEff.innerText = '91.3';
+                preNOx.innerText = '175';
+                preCO2.innerText = '0.82';
+                preCost.innerText = '236.5';
             }
+        }
 
-            modalClose.addEventListener('click', function() {
-                modal.classList.remove('show');
-            });
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) modal.classList.remove('show');
-            });
+        // ---------- 权重变化处理 ----------
+        function updateWeightDisplay() {
+            let w1 = parseFloat(weightNox.value);
+            let w2 = parseFloat(weightCost.value);
+            let w3 = parseFloat(weightEff.value);
+            weightNoxVal.innerText = w1.toFixed(2);
+            weightCostVal.innerText = w2.toFixed(2);
+            weightEffVal.innerText = w3.toFixed(2);
+            let sum = w1 + w2 + w3;
+            weightSumSpan.innerText = sum.toFixed(2);
+            // 重新计算推荐值
+            updatePredictions();
+        }
 
-            // 点击流程卡片
-            document.querySelectorAll('.flow-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const module = this.dataset.module;
-                    let title = '';
-                    let contentGenerator = (chartDiv, table) => {
-                        if (module === 'preprocess') {
-                            title = '数据预处理详情';
-                            const chart = echarts.init(chartDiv);
-                            chart.setOption({
-                                tooltip: {},
-                                xAxis: { data: ['原始', '清洗后'] },
-                                yAxis: {},
-                                series: [{ type: 'bar', data: [85, 92], color: '#2f855a' }]
-                            });
-                            table.innerHTML = `<tr><td>异常值剔除</td><td>127条 (3.2%)</td></tr><tr><td>缺失值填补</td><td>线性插值</td></tr><tr><td>滤波方法</td><td>卡尔曼滤波</td></tr>`;
-                        } else if (module === 'predict') {
-                            title = '预测模型详情';
-                            const chart = echarts.init(chartDiv);
-                            chart.setOption({
-                                tooltip: { trigger: 'axis' },
-                                xAxis: { type: 'category', data: ['1h', '2h', '3h', '4h', '5h'] },
-                                yAxis: { type: 'value' },
-                                series: [{ name: '预测NOx', type: 'line', data: [165, 172, 180, 175, 168], color: '#2f855a' }]
-                            });
-                            table.innerHTML = `<tr><td>算法</td><td>LSTM (热值) / 随机森林 (排放)</td></tr><tr><td>训练RMSE</td><td>2.3%</td></tr><tr><td>特征数量</td><td>12个</td></tr>`;
-                        } else if (module === 'optimize') {
-                            title = '多目标优化详情';
-                            const chart = echarts.init(chartDiv);
-                            const optData = [];
-                            for (let i=0;i<20;i++) optData.push([210+Math.random()*40, 150+Math.random()*50]);
-                            chart.setOption({
-                                tooltip: {},
-                                xAxis: { type: 'value', name: '成本' },
-                                yAxis: { type: 'value', name: '排放' },
-                                series: [{ type: 'scatter', data: optData, color: '#2f855a' }]
-                            });
-                            table.innerHTML = `<tr><td>优化算法</td><td>NSGA-II</td></tr><tr><td>种群大小</td><td>100</td></tr><tr><td>迭代次数</td><td>200</td></tr><tr><td>帕累托解个数</td><td>23</td></tr>`;
-                        } else if (module === 'visual') {
-                            title = '可视化决策详情';
-                            const chart = echarts.init(chartDiv);
-                            chart.setOption({
-                                tooltip: {},
-                                series: [{
-                                    type: 'pie',
-                                    data: [
-                                        { value: 62, name: '飞灰' },
-                                        { value: 30, name: '底渣' },
-                                        { value: 8, name: '烟气' }
-                                    ],
-                                    color: ['#2f855a', '#4da1cf', '#9fc5e8']
-                                }]
-                            });
-                            table.innerHTML = `<tr><td>当前推荐掺烧比</td><td>${optRatio.innerText}</td></tr><tr><td>预期减碳</td><td>2.4万吨/年</td></tr><tr><td>综合成本</td><td>${preCost.innerText} 元/吨</td></tr>`;
-                        }
-                    };
-                    showModal(title, contentGenerator);
-                });
-            });
+        [weightNox, weightCost, weightEff].forEach(s => {
+            s.addEventListener('input', updateWeightDisplay);
+        });
 
-            // 输出卡片详细分析按钮
-            document.getElementById('outputDetailBtn').addEventListener('click', function() {
-                showModal('实时预测与优化详细分析', (chartDiv, table) => {
-                    const chart = echarts.init(chartDiv);
-                    chart.setOption({
-                        tooltip: { trigger: 'axis' },
-                        xAxis: { type: 'category', data: ['当前', '+2%', '+4%', '+6%'] },
-                        yAxis: { type: 'value', name: '锅炉效率 %' },
-                        series: [{ type: 'line', data: [91.3, 90.8, 90.1, 89.2], color: '#2f855a' }]
-                    });
-                    table.innerHTML = `<tr><td>锅炉效率</td><td>${preEff.innerText}%</td></tr><tr><td>NOx排放</td><td>${preNOx.innerText} mg/m³</td></tr><tr><td>单位碳排</td><td>${preCO2.innerText} t/t</td></tr><tr><td>运行成本</td><td>${preCost.innerText} 元/吨</td></tr><tr><td>推荐掺烧比</td><td>${optRatio.innerText}</td></tr><tr><td>优化风量配比</td><td>${optParams.innerText}</td></tr>`;
-                });
+        // ---------- 事件绑定 ----------
+        [mixSlider, moistSlider, heatSlider, volatileInput, ashInput, citySelect, wasteSelect].forEach(el => {
+            el.addEventListener('input', updatePredictions);
+            el.addEventListener('change', updatePredictions);
+        });
+
+        // 重置按钮
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            mixSlider.value = 8.2;
+            moistSlider.value = 34;
+            heatSlider.value = 2950;
+            volatileInput.value = 38;
+            ashInput.value = 32;
+            citySelect.value = '上海';
+            wasteSelect.value = '市政污泥';
+            updatePredictions();
+        });
+
+        // 执行优化按钮（模拟调用后端优化接口）
+        document.getElementById('runOptimBtn').addEventListener('click', function() {
+            alert('优化请求已发送（演示模式），帕累托解集已重新生成。');
+            updatePredictions();
+        });
+
+        // 上传文件模拟
+        document.getElementById('fakeUpload').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                alert('模拟上传文件：' + e.target.files[0].name);
+            }
+        });
+
+        // ---------- 模态框逻辑 ----------
+        const modal = document.getElementById('detailModal');
+        const modalClose = document.getElementById('modalClose');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+
+        function showModal(title, contentGenerator) {
+            modalTitle.innerHTML = `<i class="fas fa-chart-bar"></i> ${title}`;
+            modalBody.innerHTML = '';
+            const chartDiv = document.createElement('div');
+            chartDiv.className = 'detail-chart';
+            modalBody.appendChild(chartDiv);
+            const table = document.createElement('table');
+            table.className = 'param-table';
+            modalBody.appendChild(table);
+            contentGenerator(chartDiv, table);
+            modal.classList.add('show');
+        }
+
+        modalClose.addEventListener('click', () => modal.classList.remove('show'));
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.remove('show');
+        });
+
+        // 点击流程卡片
+        document.querySelectorAll('.flow-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const module = this.dataset.module;
+                let title = '';
+                let contentGenerator = (chartDiv, table) => {
+                    if (module === 'preprocess') {
+                        title = '数据预处理详情';
+                        const chart = echarts.init(chartDiv);
+                        chart.setOption({
+                            tooltip: {},
+                            xAxis: { data: ['原始', '清洗后'] },
+                            yAxis: {},
+                            series: [{ type: 'bar', data: [85, 92], color: '#2f855a' }]
+                        });
+                        table.innerHTML = `<tr><td>异常值剔除</td><td>127条 (3.2%)</td></tr><tr><td>缺失值填补</td><td>线性插值</td></tr><tr><td>滤波方法</td><td>卡尔曼滤波</td></tr>`;
+                    } else if (module === 'predict') {
+                        title = '预测模型详情';
+                        const chart = echarts.init(chartDiv);
+                        chart.setOption({
+                            tooltip: { trigger: 'axis' },
+                            xAxis: { type: 'category', data: ['1h', '2h', '3h', '4h', '5h'] },
+                            yAxis: { type: 'value' },
+                            series: [{ name: '预测NOx', type: 'line', data: [165, 172, 180, 175, 168], color: '#2f855a' }]
+                        });
+                        table.innerHTML = `<tr><td>算法</td><td>LSTM (热值) / 随机森林 (排放)</td></tr><tr><td>训练RMSE</td><td>2.3%</td></tr><tr><td>特征数量</td><td>12个</td></tr>`;
+                    } else if (module === 'optimize') {
+                        title = '多目标优化详情';
+                        const chart = echarts.init(chartDiv);
+                        const optData = [];
+                        for (let i=0;i<20;i++) optData.push([210+Math.random()*40, 150+Math.random()*50]);
+                        chart.setOption({
+                            tooltip: {},
+                            xAxis: { type: 'value', name: '成本' },
+                            yAxis: { type: 'value', name: '排放' },
+                            series: [{ type: 'scatter', data: optData, color: '#2f855a' }]
+                        });
+                        table.innerHTML = `<tr><td>优化算法</td><td>NSGA-II</td></tr><tr><td>种群大小</td><td>100</td></tr><tr><td>迭代次数</td><td>200</td></tr><tr><td>帕累托解个数</td><td>23</td></tr>`;
+                    } else if (module === 'visual') {
+                        title = '可视化决策详情';
+                        const chart = echarts.init(chartDiv);
+                        chart.setOption({
+                            tooltip: {},
+                            series: [{
+                                type: 'pie',
+                                data: [
+                                    { value: 62, name: '飞灰' },
+                                    { value: 30, name: '底渣' },
+                                    { value: 8, name: '烟气' }
+                                ],
+                                color: ['#2f855a', '#4da1cf', '#9fc5e8']
+                            }]
+                        });
+                        table.innerHTML = `<tr><td>当前推荐掺烧比</td><td>${optRatio.innerText}</td></tr><tr><td>预期减碳</td><td>2.4万吨/年</td></tr><tr><td>综合成本</td><td>${preCost.innerText} 元/吨</td></tr>`;
+                    }
+                };
+                showModal(title, contentGenerator);
             });
-        })();
-    </script>
+        });
+
+        // 初始化
+        initCharts();
+        updatePredictions();
+    })();
+</script>
 </body>
 </html>
