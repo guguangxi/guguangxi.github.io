@@ -10,6 +10,19 @@
     <!-- ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <style>
+        .btn-preset {
+            background: #e2f0e8;
+            border: 1px solid #a0cfb5;
+            border-radius: 20px;
+            padding: 6px 12px;
+            margin-right: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        .btn-preset:hover {
+            background: #c7e5d4;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -555,6 +568,12 @@
 
             <!-- 权重设置面板（新增） -->
             <div class="weight-panel">
+                <div class="weight-presets" style="margin-top: 15px;">
+                    <button class="btn-preset" onclick="setWeights(0.6,0.2,0.2)">环保优先</button>
+                    <button class="btn-preset" onclick="setWeights(0.2,0.6,0.2)">经济优先</button>
+                    <button class="btn-preset" onclick="setWeights(0.2,0.2,0.6)">能效优先</button>
+                    <button class="btn-preset" onclick="setWeights(0.33,0.33,0.34)">平衡模式</button>
+                    </div>
                 <div class="weight-title"><i class="fas fa-balance-scale"></i> 权重偏好设置 (拖动滑块调整权重)</div>
                 <div class="weight-slider">
                     <label>NOx 排放权重</label>
@@ -619,6 +638,46 @@
 </div>
 
 <script>
+    function selectBestByWeights() {
+        // 获取权重值
+        let wNox = parseFloat(weightNox.value);
+        let wCost = parseFloat(weightCost.value);
+        let wEff = parseFloat(weightEff.value);
+        // 归一化权重（确保总和为1）
+        let sum = wNox + wCost + wEff;
+        if (sum === 0) sum = 1;
+        wNox /= sum; wCost /= sum; wEff /= sum;
+
+        // 对每个解计算加权得分（需将指标归一化到0~1之间，这里简单采用线性归一化）
+        let minNox = Math.min(...paretoSolutions.map(p => p.nox));
+        let maxNox = Math.max(...paretoSolutions.map(p => p.nox));
+        let minCost = Math.min(...paretoSolutions.map(p => p.cost));
+        let maxCost = Math.max(...paretoSolutions.map(p => p.cost));
+        let minEff = Math.min(...paretoSolutions.map(p => p.eff));
+        let maxEff = Math.max(...paretoSolutions.map(p => p.eff));
+
+        let best = null;
+        let bestScore = -Infinity;
+
+        paretoSolutions.forEach(p => {
+            // 归一化：排放和成本越小越好，效率越大越好
+            let noxNorm = (maxNox - p.nox) / (maxNox - minNox || 1);
+            let costNorm = (maxCost - p.cost) / (maxCost - minCost || 1);
+            let effNorm = (p.eff - minEff) / (maxEff - minEff || 1);
+            let score = wNox * noxNorm + wCost * costNorm + wEff * effNorm;
+            if (score > bestScore) {
+                bestScore = score;
+                best = p;
+            }
+        });
+        return best;
+    }
+    function setWeights(w1, w2, w3) {
+    weightNox.value = w1;
+    weightCost.value = w2;
+    weightEff.value = w3;
+    updateWeightDisplay();   // 触发更新，包括权重显示和最佳解更新
+}
     (function() {
         // ---------- DOM 元素 ----------
         const mixSlider = document.getElementById('mixSlider');
@@ -698,40 +757,6 @@
         }
 
         // ---------- 根据权重从帕累托解集中选出最优解 ----------
-        function selectBestByWeights() {
-            // 获取权重值
-            let wNox = parseFloat(weightNox.value);
-            let wCost = parseFloat(weightCost.value);
-            let wEff = parseFloat(weightEff.value);
-            // 归一化权重（确保总和为1）
-            let sum = wNox + wCost + wEff;
-            if (sum === 0) sum = 1;
-            wNox /= sum; wCost /= sum; wEff /= sum;
-
-            // 对每个解计算加权得分（需将指标归一化到0~1之间，这里简单采用线性归一化）
-            let minNox = Math.min(...paretoSolutions.map(p => p.nox));
-            let maxNox = Math.max(...paretoSolutions.map(p => p.nox));
-            let minCost = Math.min(...paretoSolutions.map(p => p.cost));
-            let maxCost = Math.max(...paretoSolutions.map(p => p.cost));
-            let minEff = Math.min(...paretoSolutions.map(p => p.eff));
-            let maxEff = Math.max(...paretoSolutions.map(p => p.eff));
-
-            let best = null;
-            let bestScore = -Infinity;
-
-            paretoSolutions.forEach(p => {
-                // 归一化：排放和成本越小越好，效率越大越好
-                let noxNorm = (maxNox - p.nox) / (maxNox - minNox || 1);
-                let costNorm = (maxCost - p.cost) / (maxCost - minCost || 1);
-                let effNorm = (p.eff - minEff) / (maxEff - minEff || 1);
-                let score = wNox * noxNorm + wCost * costNorm + wEff * effNorm;
-                if (score > bestScore) {
-                    bestScore = score;
-                    best = p;
-                }
-            });
-            return best;
-        }
 
         // ---------- 更新预测显示（模拟后端，实际可调用fetch）----------
         async function updatePredictions() {
@@ -778,18 +803,56 @@
                 preCost.innerText = '236.5';
             }
         }
-
+        // 根据当前权重从帕累托解集中选出最优解
+        function selectBestByWeights() {
+            let wNox = parseFloat(weightNox.value);
+            let wCost = parseFloat(weightCost.value);
+            let wEff = parseFloat(weightEff.value);
+            let sum = wNox + wCost + wEff;
+            if (sum === 0) sum = 1;
+            wNox /= sum;
+            wCost /= sum;
+            wEff /= sum;
+            
+            // 如果没有帕累托解集，则返回 null
+            if (!paretoSolutions || paretoSolutions.length === 0) return null;
+            
+            // 找到各目标的最大最小值（用于归一化）
+            let minNox = Math.min(...paretoSolutions.map(p => p.nox));
+            let maxNox = Math.max(...paretoSolutions.map(p => p.nox));
+            let minCost = Math.min(...paretoSolutions.map(p => p.cost));
+            let maxCost = Math.max(...paretoSolutions.map(p => p.cost));
+            let minEff = Math.min(...paretoSolutions.map(p => p.eff));
+            let maxEff = Math.max(...paretoSolutions.map(p => p.eff));
+            
+            let best = null;
+            let bestScore = -Infinity;
+            paretoSolutions.forEach(p => {
+                // 归一化：排放和成本越小越好，效率越大越好
+                let noxNorm = (maxNox - p.nox) / (maxNox - minNox || 1);
+                let costNorm = (maxCost - p.cost) / (maxCost - minCost || 1);
+                let effNorm = (p.eff - minEff) / (maxEff - minEff || 1);
+                let score = wNox * noxNorm + wCost * costNorm + wEff * effNorm;
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = p;
+                }
+            });
+            return best;
+        }
         function updateWeightDisplay() {
             // 1. 获取权重值（用 parseFloat 保留小数）
             let w1 = parseFloat(weightNox.value);
             let w2 = parseFloat(weightCost.value);
             let w3 = parseFloat(weightEff.value);
+            
             // 2. 更新权重数值显示
             weightNoxVal.innerText = w1.toFixed(2);
             weightCostVal.innerText = w2.toFixed(2);
             weightEffVal.innerText = w3.toFixed(2);
             let sum = w1 + w2 + w3;
             weightSumSpan.innerText = sum.toFixed(2);
+            
             // 3. 从帕累托解集中选出最佳解，并更新页面指标
             let best = selectBestByWeights();   // 确保这个函数已经定义
             if (best) {
