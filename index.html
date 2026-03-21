@@ -779,18 +779,30 @@
             }
         }
 
-        // ---------- 权重变化处理 ----------
         function updateWeightDisplay() {
+            // 1. 获取权重值（用 parseFloat 保留小数）
             let w1 = parseFloat(weightNox.value);
             let w2 = parseFloat(weightCost.value);
             let w3 = parseFloat(weightEff.value);
+            // 2. 更新权重数值显示
             weightNoxVal.innerText = w1.toFixed(2);
             weightCostVal.innerText = w2.toFixed(2);
             weightEffVal.innerText = w3.toFixed(2);
             let sum = w1 + w2 + w3;
             weightSumSpan.innerText = sum.toFixed(2);
-            // 重新计算推荐值
-            updatePredictions();
+            // 3. 从帕累托解集中选出最佳解，并更新页面指标
+            let best = selectBestByWeights();   // 确保这个函数已经定义
+            if (best) {
+                optRatio.innerText = best.mix.toFixed(1) + '%';
+                preEff.innerText = best.eff.toFixed(1);
+                preNOx.innerText = best.nox.toFixed(0);
+                preCost.innerText = best.cost.toFixed(1);
+                // 如果有单位碳排的显示元素，可以一并更新
+                // if (preCO2) preCO2.innerText = best.co2.toFixed(2);
+            } else {
+                // 如果 selectBestByWeights 未定义或返回空，则回退到原来的方法
+                updatePredictions();
+            }
         }
 
         [weightNox, weightCost, weightEff].forEach(s => {
