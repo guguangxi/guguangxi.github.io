@@ -628,12 +628,27 @@
 
         <!-- 流程卡片 -->
         <div class="flow-grid">
-            <div class="flow-item"><div class="icon"><i class="fas fa-database"></i></div><h3>数据预处理</h3></div>
-            <div class="flow-item"><div class="icon"><i class="fas fa-chart-line"></i></div><h3>预测模型</h3></div>
-            <div class="flow-item"><div class="icon"><i class="fas fa-square-root-variable"></i></div><h3>多目标优化</h3></div>
-            <div class="flow-item"><div class="icon"><i class="fas fa-desktop"></i></div><h3>可视化决策</h3></div>
+            <div class="flow-item" data-module="preprocess">
+                <div class="icon"><i class="fas fa-database"></i></div>
+                <h3>数据预处理</h3>
+                <p>异常剔除 · 填补 · 滤波</p >
+            </div>
+            <div class="flow-item" data-module="predict">
+                <div class="icon"><i class="fas fa-chart-line"></i></div>
+                <h3>预测模型</h3>
+                <p>成分 · 排放 · 能耗</p >
+            </div>
+            <div class="flow-item" data-module="optimize">
+                <div class="icon"><i class="fas fa-square-root-variable"></i></div>
+                <h3>多目标优化</h3>
+                <p>NSGA-II · 帕累托前沿</p >
+            </div>
+            <div class="flow-item" data-module="visual">
+                <div class="icon"><i class="fas fa-desktop"></i></div>
+                <h3>可视化决策</h3>
+                <p>运行策略 · 实时看板</p >
+            </div>
         </div>
-
         <!-- 主交互面板 -->
         <div class="main-panel">
             <!-- 左侧输入区 -->
