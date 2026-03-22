@@ -910,7 +910,90 @@
                 preCost.innerText = '236.5';
                 optRatio.innerText = '8.2%';
             }
-
+            // 流程卡片点击事件
+            document.querySelectorAll('.flow-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const module = this.dataset.module;
+                    let title = '';
+                    let contentGenerator = (chartDiv, table) => {
+                        if (module === 'preprocess') {
+                            title = '数据预处理详情';
+                            const chart = echarts.init(chartDiv);
+                            chart.setOption({
+                                tooltip: {},
+                                xAxis: { data: ['原始', '清洗后'] },
+                                yAxis: {},
+                                series: [{ type: 'bar', data: [85, 92], color: '#2f855a' }]
+                            });
+                            table.innerHTML = `生物<td>异常值剔除</td><td>127条 (3.2%)</td></tr>
+                                               <tr><td>缺失值填补</td><td>线性插值</td></tr>
+                                               <tr><td>滤波方法</td><td>卡尔曼滤波</td></tr>`;
+                        } else if (module === 'predict') {
+                            title = '预测模型详情';
+                            const chart = echarts.init(chartDiv);
+                            chart.setOption({
+                                tooltip: { trigger: 'axis' },
+                                xAxis: { type: 'category', data: ['1h', '2h', '3h', '4h', '5h'] },
+                                yAxis: { type: 'value' },
+                                series: [{ name: '预测NOx', type: 'line', data: [165, 172, 180, 175, 168], color: '#2f855a' }]
+                            });
+                            table.innerHTML = `生物<td>算法</td><td>LSTM (热值) / 随机森林 (排放)</td></tr>
+                                               <tr><td>训练RMSE</td><td>2.3%</td></tr>
+                                               <tr><td>特征数量</td><td>12个</td></tr>`;
+                        } else if (module === 'optimize') {
+                            title = '多目标优化详情';
+                            const chart = echarts.init(chartDiv);
+                            const optData = [];
+                            for (let i=0;i<20;i++) optData.push([210+Math.random()*40, 150+Math.random()*50]);
+                            chart.setOption({
+                                tooltip: {},
+                                xAxis: { type: 'value', name: '成本' },
+                                yAxis: { type: 'value', name: '排放' },
+                                series: [{ type: 'scatter', data: optData, color: '#2f855a' }]
+                            });
+                            table.innerHTML = `生物<td>优化算法</td><td>NSGA-II</td></tr>
+                                               <tr><td>种群大小</td><td>100</td></tr>
+                                               <tr><td>迭代次数</td><td>200</td></tr>
+                                               <tr><td>帕累托解个数</td><td>23</td></tr>`;
+                        } else if (module === 'visual') {
+                            title = '可视化决策详情';
+                            const chart = echarts.init(chartDiv);
+                            chart.setOption({
+                                tooltip: {},
+                                series: [{
+                                    type: 'pie',
+                                    data: [
+                                        { value: 62, name: '飞灰' },
+                                        { value: 30, name: '底渣' },
+                                        { value: 8, name: '烟气' }
+                                    ],
+                                    color: ['#2f855a', '#4da1cf', '#9fc5e8']
+                                }]
+                            });
+                            table.innerHTML = `生物<td>当前推荐掺烧比</td><td>${optRatio.innerText}</td></tr>
+                                   <tr><td>预期减碳</td><td>2.4万吨/年</td></tr>
+                                   <tr><td>综合成本</td><td>${preCost.innerText} 元/吨</td></tr>`;
+                        }
+                    };
+                    // 调用模态框显示函数（你需要定义 showModal 函数）
+                    function showModal(title, contentGenerator) {
+                        const modal = document.getElementById('detailModal');
+                        const modalTitle = document.getElementById('modalTitle');
+                        const modalBody = document.getElementById('modalBody');
+                        modalTitle.innerHTML = `<i class="fas fa-chart-bar"></i> ${title}`;
+                        modalBody.innerHTML = '';
+                        const chartDiv = document.createElement('div');
+                        chartDiv.className = 'detail-chart';
+                        modalBody.appendChild(chartDiv);
+                        const table = document.createElement('table');
+                        table.className = 'param-table';
+                        modalBody.appendChild(table);
+                        contentGenerator(chartDiv, table);
+                        modal.classList.add('show');
+                    }
+                    showModal(title, contentGenerator);
+                });
+            });
             // ---------- 主要更新函数：调用后端API ----------
             async function updatePredictions() {
                 // 更新显示数值
