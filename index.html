@@ -603,6 +603,7 @@
             </div>
             <div class="data-upload-area">
                 <button class="upload-btn" id="uploadTrigger"><i class="fas fa-cloud-upload-alt"></i> 上传企业数据</button>
+                <input type="file" id="csvUpload" accept=".csv" style="display: none;">
                 <span class="file-hint"><i class="fas fa-info-circle"></i> 支持 CSV</span>
             </div>
         </div>
@@ -737,7 +738,20 @@
                 <div id="pareChart" style="width:100%; height:240px;"></div>
             </div>
         </div>
-
+        <div class="chart-card" id="batchResultsCard" style="margin-top:20px; display:none;">
+            <h3><i class="fas fa-table"></i> 批量预测结果</h3>
+            <div style="overflow-x: auto;">
+                <table id="batchTable" style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th>掺烧比例</th><th>含水率</th><th>热值</th><th>挥发分</th><th>灰分</th><th>炉膛温度</th>
+                            <th>煤耗率(g/kWh)</th><th>碳排放(tCO2/MWh)</th><th>成本(元/kWh)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
         <div class="validation-footer">
             <i class="fas fa-check-circle"></i> 依托国家能源集团某电厂真实数据验证
         </div>
@@ -1114,9 +1128,67 @@
                 updateParetoChart();
             }
 
-            // ---------- CSV 上传处理 ----------
+            // ========== 上传企业数据功能 ==========
+            // 获取隐藏的文件选择框（已在第1步添加）
+            const csvUploadInput = document.getElementById('csvUpload');
+            // 绑定上传按钮点击事件
             document.getElementById('uploadTrigger').addEventListener('click', function() {
-                document.getElementById('csvUpload').click();
+                csvUploadInput.click();
+            });
+            // 文件选择后自动上传
+            csvUploadInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                // 显示上传中状态
+                const uploadBtn = document.getElementById('uploadTrigger');
+                const originalText = uploadBtn.innerHTML;
+                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上传中...';
+                uploadBtn.disabled = true;
+                const formData = new FormData();
+                formData.append('file', file);
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        uploadBtn.innerHTML = originalText;
+                        uploadBtn.disabled = false;
+                        if (data.success) {
+                            // 显示结果表格
+                            const batchCard = document.getElementById('batchResultsCard');
+                            const tbody = document.querySelector('#batchTable tbody');
+                            tbody.innerHTML = ''; // 清空旧数据
+                            data.data.forEach(row => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                <td>${row.mix_ratio}</td>
+                                <td>${row.moisture}</td>
+                                <td>${row.heat_value}</td>
+                                <td>${row.volatile}</td>
+                                <td>${row.ash}</td>
+                                <td>${row.temp_furnace}</td>
+                                <td>${row.coal_consumption.toFixed(2)}</td>
+                                <td>${row.carbon_emission.toFixed(4)}</td>
+                                <td>${row.operating_cost.toFixed(4)}</td>
+                            ;
+                            tbody.appendChild(tr);
+                        });
+                        batchCard.style.display = 'block';
+                        // 自动滚动到表格位置
+                        batchCard.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        alert('上传失败：' + data.error);
+                    }
+                })
+                .catch(error => {
+                    uploadBtn.innerHTML = originalText;
+                    uploadBtn.disabled = false;
+                    console.error('上传错误:', error);
+                    alert('网络错误，请检查后端服务是否启动');
+                });
+                // 清空文件选择，以便再次上传同一个文件也能触发
+                csvUploadInput.value = '';
             });
             const csvInput = document.createElement('input');
             csvInput.type = 'file';
