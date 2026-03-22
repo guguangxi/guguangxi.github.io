@@ -607,7 +607,7 @@
             </div>
         </div>
 
-        <!-- 普适性选择栏（简单示例） -->
+        <!-- 普适性选择栏 -->
         <div class="universal-bar">
             <div class="selector-group">
                 <i class="fas fa-map-marker-alt"></i>
@@ -626,7 +626,7 @@
             </div>
         </div>
 
-        <!-- 流程卡片（点击弹出模态框示例，此处简化） -->
+        <!-- 流程卡片 -->
         <div class="flow-grid">
             <div class="flow-item"><div class="icon"><i class="fas fa-database"></i></div><h3>数据预处理</h3></div>
             <div class="flow-item"><div class="icon"><i class="fas fa-chart-line"></i></div><h3>预测模型</h3></div>
@@ -655,7 +655,7 @@
                     <div class="input-badge"><i class="fas fa-flask"></i> 挥发分 <input type="number" id="volatile" value="38" step="1" min="20" max="60"> %</div>
                     <div class="input-badge"><i class="fas fa-ash"></i> 灰分 <input type="number" id="ash" value="32" step="1" min="15" max="50"> %</div>
                 </div>
-                <!-- 新增炉膛温度滑块 -->
+                <!-- 炉膛温度滑块 -->
                 <div class="param-slider">
                     <label>炉膛温度 <span id="tempVal">850 ℃</span></label>
                     <input type="range" id="tempSlider" min="800" max="950" value="850" step="1">
@@ -783,7 +783,7 @@
 
             // 图表实例
             let pollChart, pareChart;
-            // 帕累托解集数组，每个解包含 { mix, nox, cost, eff, co2, air_primary, air_secondary }
+            // 帕累托解集数组
             let paretoSolutions = [];
 
             // ---------- 模拟生成帕累托解集（根据当前输入参数） ----------
@@ -795,13 +795,11 @@
                 let ash = parseFloat(ashInput.value) || 32;
                 let temp = parseFloat(tempSlider.value) || 850;
 
-                // 生成 30 个解，掺烧比例在 5%~15% 之间，一次风配比 40~80，二次风配比 10~40
                 let solutions = [];
                 for (let i = 0; i < 30; i++) {
-                    let mix = 5 + Math.random() * 10;            // 5~15%
-                    let airPrimary = 40 + Math.random() * 40;    // 40~80%
-                    let airSecondary = 10 + Math.random() * 30;  // 10~40%
-                    // 模拟目标值（与实际输入参数相关）
+                    let mix = 5 + Math.random() * 10;
+                    let airPrimary = 40 + Math.random() * 40;
+                    let airSecondary = 10 + Math.random() * 30;
                     let nox = 150 + 2.5 * mix + 0.7 * (moisture - 30) - 0.03 * (heatIn - 2800) + 0.2 * temp + (Math.random() * 10);
                     let cost = 210 + 2.2 * mix + 0.8 * (moisture - 25) - 0.05 * (heatIn - 2500) + (Math.random() * 15);
                     let eff = 93.5 - 0.14 * mix - 0.06 * (moisture - 30) * (mix/6) - 0.002 * (3000 - heatIn) * (mix/8) + (Math.random() * 2 - 1);
@@ -809,10 +807,7 @@
                     let co2 = 0.78 + 0.012 * mix - 0.0001 * (heatIn - 2500) + 0.002 * (moisture - 30) + (Math.random() * 0.05);
                     solutions.push({ mix, nox, cost, eff, co2, air_primary: airPrimary, air_secondary: airSecondary });
                 }
-                // 按成本排序（简单帕累托近似）
                 solutions.sort((a,b) => a.cost - b.cost);
-                // 保留非支配解（简化：只保留那些 nox 和 cost 同时更好的，但这里我们保留所有并排序，作为演示）
-                // 实际应做非支配排序，但为简单，直接使用全部并显示
                 return solutions;
             }
 
@@ -820,10 +815,8 @@
             function updateParetoChart() {
                 if (!pareChart) return;
                 const data = paretoSolutions.map(p => [p.cost, p.nox]);
-                // 获取推荐解
                 let best = selectBestByWeights();
                 let highlightData = best ? [[best.cost, best.nox]] : [];
-
                 pareChart.setOption({
                     tooltip: { trigger: 'item', formatter: '成本: {c[0]} 元/吨<br>NOx: {c[1]} mg/m³' },
                     grid: { left: '12%', right: '8%', top: '10%', bottom: '15%' },
@@ -892,26 +885,62 @@
                     preNOx.innerText = best.nox.toFixed(0);
                     preCost.innerText = best.cost.toFixed(1);
                     if (preCO2) preCO2.innerText = best.co2.toFixed(2);
-                } else {
-                    // 回退
-                    updatePredictions();
                 }
             }
 
-            // ---------- 更新预测（重新生成解集并刷新图表和显示） ----------
-            function updatePredictions() {
+            // ---------- 回退模拟数据（当后端不可用时） ----------
+            function fallbackSimulation() {
+                preEff.innerText = '91.3';
+                preCO2.innerText = '0.82';
+                preCost.innerText = '236.5';
+                optRatio.innerText = '8.2%';
+            }
+
+            // ---------- 主要更新函数：调用后端API ----------
+            async function updatePredictions() {
                 // 更新显示数值
                 mixVal.innerText = mixSlider.value + '%';
                 moistVal.innerText = moistSlider.value + '%';
                 heatVal.innerText = heatSlider.value + ' kJ/kg';
                 tempVal.innerText = tempSlider.value + ' ℃';
 
-                // 重新生成帕累托解集
+                // 重新生成帕累托解集并更新图表（模拟）
                 paretoSolutions = generateParetoSolutions();
-                // 更新图表
                 updateParetoChart();
 
-                // 根据当前权重更新推荐解显示
+                // 构造请求参数
+                const params = {
+                    mix_ratio: parseFloat(mixSlider.value),
+                    moisture: parseFloat(moistSlider.value),
+                    heat_value: parseFloat(heatSlider.value),
+                    volatile: parseFloat(volatileInput.value) || 38,
+                    ash: parseFloat(ashInput.value) || 32,
+                    temp_furnace: parseFloat(tempSlider.value) || 850
+                };
+
+                try {
+                    const response = await fetch('http://127.0.0.1:5000/predict', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(params)
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        // 用后端返回的真实数据更新界面
+                        preEff.innerText = result.coal_consumption.toFixed(1);
+                        preCO2.innerText = result.carbon_emission.toFixed(3);
+                        preCost.innerText = result.operating_cost.toFixed(3);
+                        optRatio.innerText = result.recommended_ratio.toFixed(1) + '%';
+                    } else {
+                        console.error('后端返回错误:', result);
+                        fallbackSimulation();
+                    }
+                } catch (error) {
+                    console.error('请求后端失败:', error);
+                    fallbackSimulation();
+                }
+
+                // 更新权重推荐（帕累托图相关）
                 updateDisplayFromWeight();
             }
 
@@ -925,7 +954,6 @@
                 weightEffVal.innerText = w3.toFixed(2);
                 let sum = w1 + w2 + w3;
                 weightSumSpan.innerText = sum.toFixed(2);
-                // 根据新权重重新选择最优解并更新显示
                 updateDisplayFromWeight();
             }
 
@@ -946,18 +974,18 @@
                 modalBody.innerHTML = `
                     <table class="param-table">
                         <tr><td>掺烧比例</td><td>${solution.mix.toFixed(1)}%</td></tr>
-                        <tr><td>一次风配比</td><td>${solution.air_primary.toFixed(0)}%</td></tr>
-                        <tr><td>二次风配比</td><td>${solution.air_secondary.toFixed(0)}%</td></tr>
-                        <tr><td>锅炉效率</td><td>${solution.eff.toFixed(1)}%</td></tr>
-                        <tr><td>NOx排放</td><td>${solution.nox.toFixed(0)} mg/m³</td></tr>
-                        <tr><td>运行成本</td><td>${solution.cost.toFixed(1)} 元/吨</td></tr>
-                        <tr><td>单位碳排</td><td>${solution.co2.toFixed(2)} tCO2/t</td></tr>
+                        细胞<td>一次风配比</td><td>${solution.air_primary.toFixed(0)}%</td></tr>
+                        细胞<td>二次风配比</td><td>${solution.air_secondary.toFixed(0)}%</td></tr>
+                        细胞<td>锅炉效率</td><td>${solution.eff.toFixed(1)}%</td></tr>
+                        细胞<td>NOx排放</td><td>${solution.nox.toFixed(0)} mg/m³</td></tr>
+                        细胞<td>运行成本</td><td>${solution.cost.toFixed(1)} 元/吨</td></tr>
+                        细胞<td>单位碳排</td><td>${solution.co2.toFixed(2)} tCO2/t</td></tr>
                     </table>
                 `;
                 modal.classList.add('show');
             }
 
-            // ---------- 初始化图表并添加点击事件 ----------
+            // ---------- 初始化图表 ----------
             function initCharts() {
                 pollChart = echarts.init(document.getElementById('pollChart'));
                 pareChart = echarts.init(document.getElementById('pareChart'));
@@ -977,13 +1005,9 @@
 
                 // 帕累托图点击事件
                 pareChart.on('click', function(params) {
-                    if (params.componentType === 'series' && params.dataIndex !== undefined) {
-                        let idx = params.dataIndex;
-                        // 注意：因为有两个系列，我们需要区分
-                        if (params.seriesName === '帕累托解') {
-                            let solution = paretoSolutions[idx];
-                            if (solution) showSolutionDetails(solution);
-                        }
+                    if (params.componentType === 'series' && params.dataIndex !== undefined && params.seriesName === '帕累托解') {
+                        let solution = paretoSolutions[params.dataIndex];
+                        if (solution) showSolutionDetails(solution);
                     }
                 });
 
@@ -1010,14 +1034,12 @@
                     complete: function(results) {
                         if (results.data && results.data.length > 0) {
                             const data = results.data[0];
-                            // 根据列名映射填充输入控件（中文或英文均可）
                             if (data['掺烧比例'] !== undefined) mixSlider.value = data['掺烧比例'];
                             if (data['污泥含水率'] !== undefined) moistSlider.value = data['污泥含水率'];
                             if (data['入炉热值'] !== undefined) heatSlider.value = data['入炉热值'];
                             if (data['挥发分'] !== undefined) volatileInput.value = data['挥发分'];
                             if (data['灰分'] !== undefined) ashInput.value = data['灰分'];
                             if (data['炉膛温度'] !== undefined) tempSlider.value = data['炉膛温度'];
-                            // 触发更新
                             updatePredictions();
                             alert('数据已加载，请查看输入面板');
                         } else {
@@ -1035,9 +1057,7 @@
                 el.addEventListener('input', updatePredictions);
                 el.addEventListener('change', updatePredictions);
             });
-            [weightNox, weightCost, weightEff].forEach(s => {
-                s.addEventListener('input', updateWeightDisplay);
-            });
+            [weightNox, weightCost, weightEff].forEach(s => s.addEventListener('input', updateWeightDisplay));
 
             document.getElementById('resetBtn').addEventListener('click', function() {
                 mixSlider.value = 8.2;
@@ -1050,13 +1070,11 @@
                 wasteSelect.value = '市政污泥';
                 updatePredictions();
             });
-
             document.getElementById('runOptimBtn').addEventListener('click', function() {
                 alert('优化请求已发送（演示模式），帕累托解集已重新生成。');
                 updatePredictions();
             });
 
-            // 模态框关闭
             const modal = document.getElementById('detailModal');
             const modalClose = document.getElementById('modalClose');
             modalClose.addEventListener('click', () => modal.classList.remove('show'));
