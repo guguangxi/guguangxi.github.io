@@ -9,8 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-    <!-- PapaParse 用于 CSV 解析 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -733,52 +731,18 @@
 
     <script>
     (function() {
-        // 封面进入
-        const cover = document.getElementById('cover');
-        const dashboard = document.getElementById('dashboard');
-        const enterBtn = document.getElementById('enterBtn');
-        if (enterBtn) {
-            enterBtn.addEventListener('click', () => {
-                cover.classList.add('hidden');
-                dashboard.classList.add('visible');
-            });
-        }
+        // 后端地址配置
+        const BACKEND_URL = 'http://127.0.0.1:5000';
+        // 全局标志：是否使用模拟数据（当后端不可用时自动切换）
+        let usingMockData = true;   // 初始假定无后端，待检测后更新
+        // 帕累托解集存储（真实或模拟）
+        let paretoSolutions = [];
+        // 是否已执行过真实优化（用于区分模拟解和真实解）
+        let hasRealOptimization = false;
 
-        // DOM 元素
-        const mixSlider = document.getElementById('mixSlider');
-        const moistSlider = document.getElementById('moistSlider');
-        const heatSlider = document.getElementById('heatSlider');
-        const tempSlider = document.getElementById('tempSlider');
-        const mixVal = document.getElementById('mixVal');
-        const moistVal = document.getElementById('moistVal');
-        const heatVal = document.getElementById('heatVal');
-        const tempVal = document.getElementById('tempVal');
-        const volatileInput = document.getElementById('volatile');
-        const ashInput = document.getElementById('ash');
-        const citySelect = document.getElementById('citySelect');
-        const wasteSelect = document.getElementById('wasteTypeSelect');
-        const preEff = document.getElementById('preEff');
-        const preNOx = document.getElementById('preNOx');
-        const preCO2 = document.getElementById('preCO2');
-        const preCost = document.getElementById('preCost');
-        const optRatio = document.getElementById('optRatio');
-
-        // 权重元素（改为碳排放、成本、煤耗）
-        const weightCarbon = document.getElementById('weightCarbon');
-        const weightCost = document.getElementById('weightCost');
-        const weightCoal = document.getElementById('weightCoal');
-        const weightCarbonVal = document.getElementById('weightCarbonVal');
-        const weightCostVal = document.getElementById('weightCostVal');
-        const weightCoalVal = document.getElementById('weightCoalVal');
-        const weightSumSpan = document.getElementById('weightSum');
-
-        // 图表实例
-        let pollChart, pareChart;
-        // 帕累托解集数组（存储从后端获取的真实解）
-        let paretoSolutions = [];  // 每个元素 { mix, cost, carbon, coal_rate, ... }
-
-        // ==================== 模拟生成（保留用于降级，但优化按钮会覆盖） ====================
-        function generateParetoSolutions() {
+        // ========== 辅助函数 ==========
+        // 模拟生成帕累托解集（基于当前输入参数）
+        function generateMockPareto() {
             let mixBase = parseFloat(mixSlider.value);
             let moisture = parseFloat(moistSlider.value);
             let heatIn = parseFloat(heatSlider.value);
@@ -790,21 +754,20 @@
                 let mix = 5 + Math.random() * 10;
                 let airPrimary = 40 + Math.random() * 40;
                 let airSecondary = 10 + Math.random() * 30;
-                let nox = 150 + 2.5 * mix + 0.7 * (moisture - 30) - 0.03 * (heatIn - 2800) + 0.2 * temp + (Math.random() * 10);
-                let cost = 210 + 2.2 * mix + 0.8 * (moisture - 25) - 0.05 * (heatIn - 2500) + (Math.random() * 15);
-                let eff = 93.5 - 0.14 * mix - 0.06 * (moisture - 30) * (mix/6) - 0.002 * (3000 - heatIn) * (mix/8) + (Math.random() * 2 - 1);
-                eff = Math.min(95, Math.max(86, eff));
-                let co2 = 0.78 + 0.012 * mix - 0.0001 * (heatIn - 2500) + 0.002 * (moisture - 30) + (Math.random() * 0.05);
-                solutions.push({ mix, nox, cost, eff, co2, air_primary: airPrimary, air_secondary: airSecondary });
+                // 模拟目标值：煤耗、碳排放、成本
+                let coal = 310 + 0.8 * mix + 0.2 * (moisture - 30) - 0.01 * (heatIn - 2800) + Math.random() * 5;
+                let carbon = 0.75 + 0.008 * mix + 0.003 * (moisture - 30) - 0.0001 * (heatIn - 2800) + Math.random() * 0.05;
+                let cost = 220 + 1.5 * mix + 0.6 * (moisture - 30) - 0.03 * (heatIn - 2800) + Math.random() * 10;
+                solutions.push({ mix, coal_rate: coal, carbon, cost, air_primary: airPrimary, air_secondary: airSecondary });
             }
+            // 按成本排序（用于展示）
             solutions.sort((a,b) => a.cost - b.cost);
             return solutions;
         }
 
-        // 更新帕累托图（使用成本 vs 碳排放）
+        // 更新帕累托图（成本 vs 碳排放）
         function updateParetoChart() {
             if (!pareChart) return;
-            // 从 paretoSolutions 中提取成本和碳排放
             const data = paretoSolutions.map(p => [p.cost, p.carbon]);
             let best = selectBestByWeights();
             let highlightData = best ? [[best.cost, best.carbon]] : [];
@@ -862,69 +825,18 @@
                 optRatio.innerText = best.mix.toFixed(1) + '%';
                 preCost.innerText = best.cost.toFixed(1);
                 preCO2.innerText = best.carbon.toFixed(3);
-                // 煤耗显示在锅炉效率位置（暂代，实际可调整）
                 preEff.innerText = best.coal_rate.toFixed(1);
-                // NOx 暂无法获取，保持原值或显示占位
-                // preNOx.innerText = ... 这里不更新，保持原有
+                // NOx 暂无法从后端获取，保持原样或显示占位
             }
         }
 
-        // 回退模拟数据（当后端不可用时）
+        // 回退模拟预测数据（当后端不可用时）
         function fallbackSimulation() {
             preEff.innerText = '91.3';
             preCO2.innerText = '0.82';
             preCost.innerText = '236.5';
             optRatio.innerText = '8.2%';
         }
-
-        // 流程卡片点击事件（保持不变，略，但需要保留在原有代码中）
-        document.querySelectorAll('.flow-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const module = this.dataset.module;
-                let title = '';
-                let contentGenerator = (chartDiv, table) => {
-                    if (module === 'preprocess') {
-                        title = '数据预处理详情';
-                        const chart = echarts.init(chartDiv);
-                        chart.setOption({ tooltip: {}, xAxis: { data: ['原始', '清洗后'] }, yAxis: {}, series: [{ type: 'bar', data: [85, 92], color: '#2f855a' }] });
-                        table.innerHTML = `<tr><td>异常值剔除</td><td>127条 (3.2%)</td></tr><tr><td>缺失值填补</td><td>线性插值</td></tr><tr><td>滤波方法</td><td>卡尔曼滤波</td></tr>`;
-                    } else if (module === 'predict') {
-                        title = '预测模型详情';
-                        const chart = echarts.init(chartDiv);
-                        chart.setOption({ tooltip: { trigger: 'axis' }, xAxis: { type: 'category', data: ['1h', '2h', '3h', '4h', '5h'] }, yAxis: { type: 'value' }, series: [{ name: '预测NOx', type: 'line', data: [165, 172, 180, 175, 168], color: '#2f855a' }] });
-                        table.innerHTML = `<tr><td>算法</td><td>LSTM (热值) / 随机森林 (排放)</td></tr><tr><td>训练RMSE</td><td>2.3%</td></tr><tr><td>特征数量</td><td>12个</td></tr>`;
-                    } else if (module === 'optimize') {
-                        title = '多目标优化详情';
-                        const chart = echarts.init(chartDiv);
-                        const optData = [];
-                        for (let i=0;i<20;i++) optData.push([210+Math.random()*40, 150+Math.random()*50]);
-                        chart.setOption({ tooltip: {}, xAxis: { type: 'value', name: '成本' }, yAxis: { type: 'value', name: '排放' }, series: [{ type: 'scatter', data: optData, color: '#2f855a' }] });
-                        table.innerHTML = `<tr><td>优化算法</td><td>NSGA-II</td></tr><tr><td>种群大小</td><td>100</td></tr><tr><td>迭代次数</td><td>200</td></tr><tr><td>帕累托解个数</td><td>${paretoSolutions.length}</td></tr>`;
-                    } else if (module === 'visual') {
-                        title = '可视化决策详情';
-                        const chart = echarts.init(chartDiv);
-                        chart.setOption({ tooltip: {}, series: [{ type: 'pie', data: [{ value: 62, name: '飞灰' }, { value: 30, name: '底渣' }, { value: 8, name: '烟气' }], color: ['#2f855a', '#4da1cf', '#9fc5e8'] }] });
-                        table.innerHTML = `<tr><td>当前推荐掺烧比</td><td>${optRatio.innerText}</td></tr><tr><td>预期减碳</td><td>2.4万吨/年</td></tr><tr><td>综合成本</td><td>${preCost.innerText} 元/吨</td></tr>`;
-                    }
-                };
-                function showModal(title, contentGenerator) {
-                    const modal = document.getElementById('detailModal');
-                    const modalTitle = document.getElementById('modalTitle');
-                    const modalBody = document.getElementById('modalBody');
-                    modalTitle.innerHTML = `<i class="fas fa-chart-bar"></i> ${title}`;
-                    modalBody.innerHTML = '';
-                    const chartDiv = document.createElement('div');
-                    chartDiv.className = 'detail-chart';
-                    modalBody.appendChild(chartDiv);
-                    const table = document.createElement('table');
-                    table.className = 'param-table';
-                    modalBody.appendChild(table);
-                    contentGenerator(chartDiv, table);
-                    modal.classList.add('show');
-                }
-                showModal(title, contentGenerator);
-            });
-        });
 
         // 主要更新函数：调用后端预测接口
         async function updatePredictions() {
@@ -944,34 +856,30 @@
                 temp_furnace: parseFloat(tempSlider.value) || 850
             };
 
-            try {
-                const response = await fetch('http://127.0.0.1:5000/predict', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(params)
-                });
-                const result = await response.json();
-                if (result.success) {
-                    // 用后端返回的真实数据更新界面（注意：后端返回的是煤耗、碳排、成本）
-                    preEff.innerText = result.coal_consumption.toFixed(1);
-                    preCO2.innerText = result.carbon_emission.toFixed(3);
-                    preCost.innerText = result.operating_cost.toFixed(3);
-                    optRatio.innerText = result.recommended_ratio.toFixed(1) + '%';
-                } else {
-                    console.error('后端返回错误:', result);
-                    fallbackSimulation();
+            if (!usingMockData) {
+                try {
+                    const response = await fetch(`${BACKEND_URL}/predict`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(params)
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        preEff.innerText = result.coal_consumption.toFixed(1);
+                        preCO2.innerText = result.carbon_emission.toFixed(3);
+                        preCost.innerText = result.operating_cost.toFixed(3);
+                        optRatio.innerText = result.recommended_ratio.toFixed(1) + '%';
+                        return;
+                    } else {
+                        console.warn('后端预测错误:', result);
+                    }
+                } catch (err) {
+                    console.warn('预测请求失败，切换到模拟模式:', err);
+                    usingMockData = true;
                 }
-            } catch (error) {
-                console.error('请求后端失败:', error);
-                fallbackSimulation();
             }
-
-            // 注意：帕累托图在优化按钮触发时才会从后端获取真实解，这里暂时保留模拟解以保证图表有数据
-            if (paretoSolutions.length === 0) {
-                paretoSolutions = generateParetoSolutions(); // 临时模拟，避免图表空白
-            }
-            updateParetoChart();
-            updateDisplayFromWeight();
+            // 模拟模式
+            fallbackSimulation();
         }
 
         // 权重变化处理
@@ -1001,16 +909,28 @@
             const modalTitle = document.getElementById('modalTitle');
             const modalBody = document.getElementById('modalBody');
             modalTitle.innerHTML = '<i class="fas fa-chart-bar"></i> 帕累托解详情';
-            modalBody.innerHTML = `
-                <table class="param-table">
-                    <tr><td>掺烧比例</td><td>${solution.mix.toFixed(1)}%</td></tr>
-                    <tr><td>一次风配比</td><td>${solution.air_primary ? solution.air_primary.toFixed(0) : 'N/A'}%</td></tr>
-                    <tr><td>二次风配比</td><td>${solution.air_secondary ? solution.air_secondary.toFixed(0) : 'N/A'}%</td></tr>
-                    <tr><td>煤耗率</td><td>${solution.coal_rate.toFixed(2)} g/kWh</td></tr>
-                    <tr><td>碳排放</td><td>${solution.carbon.toFixed(4)} tCO₂/MWh</td></tr>
-                    <tr><td>运行成本</td><td>${solution.cost.toFixed(2)} 元/吨</td></tr>
-                </table>
-            `;
+            modalBody.innerHTML = '';
+            const table = document.createElement('table');
+            table.className = 'param-table';
+            const rows = [
+                ['掺烧比例', solution.mix.toFixed(1) + '%'],
+                ['一次风配比', (solution.air_primary || 'N/A') + '%'],
+                ['二次风配比', (solution.air_secondary || 'N/A') + '%'],
+                ['煤耗率', solution.coal_rate.toFixed(2) + ' g/kWh'],
+                ['碳排放', solution.carbon.toFixed(4) + ' tCO₂/MWh'],
+                ['运行成本', solution.cost.toFixed(2) + ' 元/吨']
+            ];
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+                const td1 = document.createElement('td');
+                td1.textContent = row[0];
+                const td2 = document.createElement('td');
+                td2.textContent = row[1];
+                tr.appendChild(td1);
+                tr.appendChild(td2);
+                table.appendChild(tr);
+            });
+            modalBody.appendChild(table);
             modal.classList.add('show');
         }
 
@@ -1038,8 +958,8 @@
                 }
             });
 
-            // 初始模拟解集
-            paretoSolutions = generateParetoSolutions();
+            // 初始生成模拟解集
+            paretoSolutions = generateMockPareto();
             updateParetoChart();
         }
 
@@ -1061,7 +981,7 @@
             const formData = new FormData();
             formData.append('file', file);
 
-            fetch('/upload', {
+            fetch(`${BACKEND_URL}/upload`, {
                 method: 'POST',
                 body: formData
             })
@@ -1075,11 +995,19 @@
                     tbody.innerHTML = '';
                     data.data.forEach(row => {
                         const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${row.mix_ratio}</td><td>${row.moisture}</td><td>${row.heat_value}</td>
-                            <td>${row.volatile}</td><td>${row.ash}</td><td>${row.temp_furnace}</td>
-                            <td>${row.coal_consumption.toFixed(2)}</td><td>${row.carbon_emission.toFixed(4)}</td><td>${row.operating_cost.toFixed(4)}</td>
-                        `;
+                        // 使用 textContent 构建安全内容
+                        const cells = [
+                            row.mix_ratio, row.moisture, row.heat_value,
+                            row.volatile, row.ash, row.temp_furnace,
+                            row.coal_consumption.toFixed(2),
+                            row.carbon_emission.toFixed(4),
+                            row.operating_cost.toFixed(4)
+                        ];
+                        cells.forEach(val => {
+                            const td = document.createElement('td');
+                            td.textContent = val;
+                            tr.appendChild(td);
+                        });
                         tbody.appendChild(tr);
                     });
                     batchCard.style.display = 'block';
@@ -1097,59 +1025,65 @@
             csvUploadInput.value = '';
         });
 
-        // 原有的本地 CSV 解析（保留，用于填充输入面板）
-        const csvInput = document.createElement('input');
-        csvInput.type = 'file';
-        csvInput.accept = '.csv';
-        csvInput.style.display = 'none';
-        document.body.appendChild(csvInput);
-        csvInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            Papa.parse(file, {
-                header: true,
-                dynamicTyping: true,
-                complete: function(results) {
-                    if (results.data && results.data.length > 0) {
-                        const data = results.data[0];
-                        if (data['掺烧比例'] !== undefined) mixSlider.value = data['掺烧比例'];
-                        if (data['污泥含水率'] !== undefined) moistSlider.value = data['污泥含水率'];
-                        if (data['入炉热值'] !== undefined) heatSlider.value = data['入炉热值'];
-                        if (data['挥发分'] !== undefined) volatileInput.value = data['挥发分'];
-                        if (data['灰分'] !== undefined) ashInput.value = data['灰分'];
-                        if (data['炉膛温度'] !== undefined) tempSlider.value = data['炉膛温度'];
-                        updatePredictions();
-                        alert('数据已加载，请查看输入面板');
-                    } else {
-                        alert('CSV 文件无有效数据');
+        // ========== 流程卡片模态框 ==========
+        document.querySelectorAll('.flow-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const module = this.dataset.module;
+                let title = '';
+                let contentGenerator = (chartDiv, table) => {
+                    if (module === 'preprocess') {
+                        title = '数据预处理详情';
+                        const chart = echarts.init(chartDiv);
+                        chart.setOption({ tooltip: {}, xAxis: { data: ['原始', '清洗后'] }, yAxis: {}, series: [{ type: 'bar', data: [85, 92], color: '#2f855a' }] });
+                        table.innerHTML = `<tr><td>异常值剔除</td><td>127条 (3.2%)</td></tr>
+                                           <tr><td>缺失值填补</td><td>线性插值</td></tr>
+                                           <tr><td>滤波方法</td><td>卡尔曼滤波</td></tr>`;
+                    } else if (module === 'predict') {
+                        title = '预测模型详情';
+                        const chart = echarts.init(chartDiv);
+                        chart.setOption({ tooltip: { trigger: 'axis' }, xAxis: { type: 'category', data: ['1h', '2h', '3h', '4h', '5h'] }, yAxis: { type: 'value' }, series: [{ name: '预测NOx', type: 'line', data: [165, 172, 180, 175, 168], color: '#2f855a' }] });
+                        table.innerHTML = `<tr><td>算法</td><td>LSTM (热值) / 随机森林 (排放)</td></tr>
+                                           <tr><td>训练RMSE</td><td>2.3%</td></tr>
+                                           <tr><td>特征数量</td><td>12个</td></tr>`;
+                    } else if (module === 'optimize') {
+                        title = '多目标优化详情';
+                        const chart = echarts.init(chartDiv);
+                        const optData = [];
+                        for (let i=0;i<20;i++) optData.push([210+Math.random()*40, 150+Math.random()*50]);
+                        chart.setOption({ tooltip: {}, xAxis: { type: 'value', name: '成本' }, yAxis: { type: 'value', name: '排放' }, series: [{ type: 'scatter', data: optData, color: '#2f855a' }] });
+                        table.innerHTML = `<tr><td>优化算法</td><td>NSGA-II</td></tr>
+                                           <tr><td>种群大小</td><td>100</td></tr>
+                                           <tr><td>迭代次数</td><td>200</td></tr>
+                                           <tr><td>帕累托解个数</td><td>${paretoSolutions.length}</td></tr>`;
+                    } else if (module === 'visual') {
+                        title = '可视化决策详情';
+                        const chart = echarts.init(chartDiv);
+                        chart.setOption({ tooltip: {}, series: [{ type: 'pie', data: [{ value: 62, name: '飞灰' }, { value: 30, name: '底渣' }, { value: 8, name: '烟气' }], color: ['#2f855a', '#4da1cf', '#9fc5e8'] }] });
+                        table.innerHTML = `<tr><td>当前推荐掺烧比</td><td>${optRatio.innerText}</td></tr>
+                                           <tr><td>预期减碳</td><td>2.4万吨/年</td></tr>
+                                           <tr><td>综合成本</td><td>${preCost.innerText} 元/吨</td></tr>`;
                     }
-                },
-                error: function(err) {
-                    alert('解析 CSV 失败: ' + err.message);
+                };
+                function showModal(title, contentGenerator) {
+                    const modal = document.getElementById('detailModal');
+                    const modalTitle = document.getElementById('modalTitle');
+                    const modalBody = document.getElementById('modalBody');
+                    modalTitle.innerHTML = `<i class="fas fa-chart-bar"></i> ${title}`;
+                    modalBody.innerHTML = '';
+                    const chartDiv = document.createElement('div');
+                    chartDiv.className = 'detail-chart';
+                    modalBody.appendChild(chartDiv);
+                    const table = document.createElement('table');
+                    table.className = 'param-table';
+                    modalBody.appendChild(table);
+                    contentGenerator(chartDiv, table);
+                    modal.classList.add('show');
                 }
+                showModal(title, contentGenerator);
             });
         });
 
-        // 事件绑定
-        [mixSlider, moistSlider, heatSlider, tempSlider, volatileInput, ashInput, citySelect, wasteSelect].forEach(el => {
-            el.addEventListener('input', updatePredictions);
-            el.addEventListener('change', updatePredictions);
-        });
-        [weightCarbon, weightCost, weightCoal].forEach(s => s.addEventListener('input', updateWeightDisplay));
-
-        document.getElementById('resetBtn').addEventListener('click', function() {
-            mixSlider.value = 8.2;
-            moistSlider.value = 34;
-            heatSlider.value = 2950;
-            volatileInput.value = 38;
-            ashInput.value = 32;
-            tempSlider.value = 850;
-            citySelect.value = '上海';
-            wasteSelect.value = '市政污泥';
-            updatePredictions();
-        });
-
-        // ========== 关键修改：执行多目标优化按钮，调用后端 /optimize 接口 ==========
+        // ========== 执行多目标优化 ==========
         document.getElementById('runOptimBtn').addEventListener('click', async function() {
             const btn = this;
             const originalText = btn.innerHTML;
@@ -1157,7 +1091,6 @@
             btn.disabled = true;
 
             try {
-                // 获取当前输入参数（固定工况）
                 const params = {
                     moisture: parseFloat(moistSlider.value),
                     heat: parseFloat(heatSlider.value),
@@ -1171,55 +1104,58 @@
                     ]
                 };
 
-                const response = await fetch('http://127.0.0.1:5000/optimize', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(params)
-                });
-                const result = await response.json();
-
-                if (result.success) {
-                    // 将后端返回的帕累托解转换为前端需要的格式
-                    // result.pareto_X: 每行 [掺烧比例, 一次风配比, 二次风配比]
-                    // result.pareto_F: 每行 [煤耗, 碳排放, 成本]
-                    const newSolutions = [];
-                    for (let i = 0; i < result.pareto_X.length; i++) {
-                        newSolutions.push({
-                            mix: result.pareto_X[i][0],
-                            air_primary: result.pareto_X[i][1],
-                            air_secondary: result.pareto_X[i][2],
-                            coal_rate: result.pareto_F[i][0],
-                            carbon: result.pareto_F[i][1],
-                            cost: result.pareto_F[i][2]
-                        });
-                    }
-                    paretoSolutions = newSolutions;
-
-                    // 更新帕累托图
-                    updateParetoChart();
-
-                    // 根据当前权重选取推荐解并更新界面
-                    const best = selectBestByWeights();
-                    if (best) {
-                        optRatio.innerText = best.mix.toFixed(1) + '%';
-                        preCost.innerText = best.cost.toFixed(2);
-                        preCO2.innerText = best.carbon.toFixed(4);
-                        preEff.innerText = best.coal_rate.toFixed(2);
-                        // 注意：NOx 暂无法从后端获取，保持原样或清空
-                        // preNOx.innerText = '--';
-                    } else {
-                        // 使用后端推荐解（如果返回了）
-                        if (result.recommended) {
+                if (!usingMockData) {
+                    const response = await fetch(`${BACKEND_URL}/optimize`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(params)
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        const newSolutions = [];
+                        for (let i = 0; i < result.pareto_X.length; i++) {
+                            newSolutions.push({
+                                mix: result.pareto_X[i][0],
+                                air_primary: result.pareto_X[i][1],
+                                air_secondary: result.pareto_X[i][2],
+                                coal_rate: result.pareto_F[i][0],
+                                carbon: result.pareto_F[i][1],
+                                cost: result.pareto_F[i][2]
+                            });
+                        }
+                        paretoSolutions = newSolutions;
+                        hasRealOptimization = true;
+                        updateParetoChart();
+                        const best = selectBestByWeights();
+                        if (best) {
+                            optRatio.innerText = best.mix.toFixed(1) + '%';
+                            preCost.innerText = best.cost.toFixed(2);
+                            preCO2.innerText = best.carbon.toFixed(4);
+                            preEff.innerText = best.coal_rate.toFixed(2);
+                        } else if (result.recommended) {
                             optRatio.innerText = result.recommended.mix_ratio.toFixed(1) + '%';
                             preCost.innerText = result.recommended.cost.toFixed(2);
                             preCO2.innerText = result.recommended.carbon.toFixed(4);
                             preEff.innerText = result.recommended.coal_rate.toFixed(2);
                         }
+                        alert(`优化完成，获得 ${paretoSolutions.length} 个帕累托解`);
+                        return;
+                    } else {
+                        console.warn('后端优化失败:', result);
                     }
-                    alert(`优化完成，获得 ${paretoSolutions.length} 个帕累托解`);
-                } else {
-                    alert('优化失败：' + result.error);
                 }
+                // 模拟模式
+                paretoSolutions = generateMockPareto();
+                hasRealOptimization = false;
+                updateParetoChart();
+                const best = selectBestByWeights();
+                if (best) {
+                    optRatio.innerText = best.mix.toFixed(1) + '%';
+                    preCost.innerText = best.cost.toFixed(2);
+                    preCO2.innerText = best.carbon.toFixed(4);
+                    preEff.innerText = best.coal_rate.toFixed(2);
+                }
+                alert(`模拟优化完成，获得 ${paretoSolutions.length} 个帕累托解（演示模式）`);
             } catch (error) {
                 console.error('优化请求错误:', error);
                 alert('网络错误，请检查后端服务是否启动');
@@ -1229,13 +1165,101 @@
             }
         });
 
+        // ========== 重置参数 ==========
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            mixSlider.value = 8.2;
+            moistSlider.value = 34;
+            heatSlider.value = 2950;
+            volatileInput.value = 38;
+            ashInput.value = 32;
+            tempSlider.value = 850;
+            citySelect.value = '上海';
+            wasteSelect.value = '市政污泥';
+            // 重置帕累托解为模拟数据
+            paretoSolutions = generateMockPareto();
+            hasRealOptimization = false;
+            updateParetoChart();
+            updatePredictions();
+        });
+
+        // ========== 滑块变化时更新预测，并同步模拟帕累托（若未进行过真实优化） ==========
+        function onSliderChange() {
+            updatePredictions();
+            if (!hasRealOptimization) {
+                paretoSolutions = generateMockPareto();
+                updateParetoChart();
+            }
+        }
+
+        // 绑定所有滑块和输入框事件
+        const sliders = [mixSlider, moistSlider, heatSlider, tempSlider, volatileInput, ashInput, citySelect, wasteSelect];
+        sliders.forEach(el => {
+            el.addEventListener('input', onSliderChange);
+            el.addEventListener('change', onSliderChange);
+        });
+
+        // 权重变化
+        [weightCarbon, weightCost, weightCoal].forEach(s => s.addEventListener('input', updateWeightDisplay));
+
+        // 模态框关闭
         const modal = document.getElementById('detailModal');
         const modalClose = document.getElementById('modalClose');
         modalClose.addEventListener('click', () => modal.classList.remove('show'));
         modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
 
+        // ========== 检测后端可用性 ==========
+        async function checkBackend() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/`);
+                if (res.ok) {
+                    usingMockData = false;
+                    console.log('后端服务可用，使用真实数据');
+                    // 尝试获取一次真实优化结果，使界面有真实解集
+                    const params = {
+                        moisture: parseFloat(moistSlider.value),
+                        heat: parseFloat(heatSlider.value),
+                        volatile: parseFloat(volatileInput.value) || 38,
+                        ash: parseFloat(ashInput.value) || 32,
+                        temp: parseFloat(tempSlider.value) || 850,
+                        weights: [0.33, 0.33, 0.34]
+                    };
+                    const optRes = await fetch(`${BACKEND_URL}/optimize`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(params)
+                    });
+                    const optData = await optRes.json();
+                    if (optData.success) {
+                        const newSolutions = [];
+                        for (let i = 0; i < optData.pareto_X.length; i++) {
+                            newSolutions.push({
+                                mix: optData.pareto_X[i][0],
+                                air_primary: optData.pareto_X[i][1],
+                                air_secondary: optData.pareto_X[i][2],
+                                coal_rate: optData.pareto_F[i][0],
+                                carbon: optData.pareto_F[i][1],
+                                cost: optData.pareto_F[i][2]
+                            });
+                        }
+                        paretoSolutions = newSolutions;
+                        hasRealOptimization = true;
+                        updateParetoChart();
+                        updateDisplayFromWeight();
+                    }
+                } else {
+                    usingMockData = true;
+                    console.warn('后端响应异常，使用模拟数据');
+                }
+            } catch (e) {
+                usingMockData = true;
+                console.warn('后端不可用，使用模拟数据', e);
+            }
+        }
+
+        // 启动应用
         initCharts();
         updatePredictions();
+        checkBackend();
     })();
     </script>
 </body>
