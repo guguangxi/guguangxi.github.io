@@ -442,13 +442,28 @@
                 let highlightData = best ? [[best.cost, best.carbon]] : [];
                 pareChart.setOption({
                     tooltip: { trigger: 'item', formatter: '成本: {c[0]} 元/吨<br>碳排放: {c[1]} tCO₂/MWh' },
-                    grid: { left: '12%', right: '8%', top: '10%', bottom: '15%' },
-                    xAxis: { type: 'value', name: '运行成本 (元/吨)' },
-                    yAxis: { type: 'value', name: '碳排放 (tCO₂/MWh)' },
-                    series: [
-                        { name: '帕累托解', type: 'scatter', data: data, symbolSize: 8, itemStyle: { color: '#2f855a' } },
-                        { name: '推荐解', type: 'scatter', data: highlightData, symbolSize: 14, itemStyle: { color: '#ffaa00', borderColor: '#ffffff', borderWidth: 2 } }
-                    ]
+                    grid: { left: '15%', right: '8%', top: '15%', bottom: '15%', containLabel: true },
+                    xAxis: {
+                        type: 'value',
+                        name: '运行成本 (元/吨)',
+                        nameTextStyle: { fontSize: 14, fontWeight: 'bold', color: '#1e3e2c' },
+                        axisLabel: { fontSize: 12, color: '#2c5a3e' },
+                        axisLine: { lineStyle: { color: '#2f855a' } },
+                        splitLine: { show: true, lineStyle: { color: '#d9ead9', type: 'dashed' } },
+                        min: function(value) { return value.min - (value.max - value.min) * 0.05; },
+                        max: function(value) { return value.max + (value.max - value.min) * 0.05; }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '碳排放 (tCO₂/MWh)',
+                        nameTextStyle: { fontSize: 14, fontWeight: 'bold', color: '#1e3e2c' },
+                        axisLabel: { fontSize: 12, color: '#2c5a3e' },
+                        axisLine: { lineStyle: { color: '#2f855a' } },
+                        splitLine: { show: true, lineStyle: { color: '#d9ead9', type: 'dashed' } },
+                        min: function(value) { return value.min - (value.max - value.min) * 0.05; },
+                        max: function(value) { return value.max + (value.max - value.min) * 0.05; }
+                    },
+                    series: [ ... ]  // 保持原有 series 配置不变
                 }, true);
             }
 
