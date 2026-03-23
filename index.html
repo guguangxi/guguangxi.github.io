@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <!-- PapaParse 用于 CSV 解析 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -117,72 +119,441 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
-        /* 其余样式与之前相同，此处省略（实际应与之前一致） */
-        /* 为保证代码完整，以下保留必要样式，请确保所有样式存在 */
-        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; }
-        .title-section h1 { font-size: 2.2rem; font-weight: 700; background: linear-gradient(135deg, #0f4f2e, #2d7a4b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -0.02em; line-height: 1.2; }
-        .subtitle { background: #dcf0e3; padding: 6px 14px; border-radius: 40px; display: inline-block; margin-top: 8px; font-weight: 500; border: 1px solid #9dc0a5; }
-        .data-upload-area { background: white; border-radius: 60px; padding: 8px 20px 8px 12px; display: flex; align-items: center; gap: 15px; box-shadow: 0 8px 18px rgba(0,60,20,0.08); border: 1px solid #bcddc4; }
-        .upload-btn { background: #2f855a; color: white; border: none; border-radius: 40px; padding: 12px 28px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
-        .upload-btn:hover { background: #276749; }
-        .universal-bar { display: flex; flex-wrap: wrap; gap: 20px; background: rgba(255,255,255,0.7); border-radius: 50px; padding: 15px 25px; margin-bottom: 30px; border: 1px solid #b2d3bb; align-items: center; }
-        .selector-group { display: flex; align-items: center; gap: 10px; background: #f5fbf7; padding: 6px 16px; border-radius: 40px; border: 1px solid #b7d9c4; }
-        .selector-group i { color: #2f855a; font-size: 1.2rem; }
-        .selector-group select { border: none; background: transparent; font-weight: 500; color: #1e4b2f; font-size: 0.95rem; outline: none; padding: 8px 0; min-width: 100px; }
-        .flow-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
-        .flow-item { background: white; border-radius: 28px; padding: 18px 12px; text-align: center; box-shadow: 0 6px 14px rgba(70, 130, 90, 0.1); border: 1px solid #cae0d2; transition: transform 0.2s; cursor: pointer; }
-        .flow-item:hover { transform: translateY(-4px); background: #edf8f0; }
-        .flow-item .icon { background: #e2f0e8; width: 50px; height: 50px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 24px; color: #1f6e4a; }
+        /* 头部区域 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .title-section h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0f4f2e, #2d7a4b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+        .subtitle {
+            background: #dcf0e3;
+            padding: 6px 14px;
+            border-radius: 40px;
+            display: inline-block;
+            margin-top: 8px;
+            font-weight: 500;
+            border: 1px solid #9dc0a5;
+        }
+        .data-upload-area {
+            background: white;
+            border-radius: 60px;
+            padding: 8px 20px 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 8px 18px rgba(0,60,20,0.08);
+            border: 1px solid #bcddc4;
+        }
+        .upload-btn {
+            background: #2f855a;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 12px 28px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+        .upload-btn:hover {
+            background: #276749;
+        }
+        /* 普适性选择栏 */
+        .universal-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 50px;
+            padding: 15px 25px;
+            margin-bottom: 30px;
+            border: 1px solid #b2d3bb;
+            align-items: center;
+        }
+        .selector-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f5fbf7;
+            padding: 6px 16px;
+            border-radius: 40px;
+            border: 1px solid #b7d9c4;
+        }
+        .selector-group i {
+            color: #2f855a;
+            font-size: 1.2rem;
+        }
+        .selector-group select {
+            border: none;
+            background: transparent;
+            font-weight: 500;
+            color: #1e4b2f;
+            font-size: 0.95rem;
+            outline: none;
+            padding: 8px 0;
+            min-width: 100px;
+        }
+        /* 流程卡片 */
+        .flow-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .flow-item {
+            background: white;
+            border-radius: 28px;
+            padding: 18px 12px;
+            text-align: center;
+            box-shadow: 0 6px 14px rgba(70, 130, 90, 0.1);
+            border: 1px solid #cae0d2;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .flow-item:hover {
+            transform: translateY(-4px);
+            background: #edf8f0;
+        }
+        .flow-item .icon {
+            background: #e2f0e8;
+            width: 50px;
+            height: 50px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 24px;
+            color: #1f6e4a;
+        }
         .flow-item h3 { font-size: 1rem; font-weight: 600; color: #0e4f2c; margin-bottom: 5px; }
         .flow-item p { font-size: 0.8rem; color: #3a6b4f; }
-        .main-panel { display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 24px; margin-bottom: 30px; }
-        .input-card, .output-card { background: white; border-radius: 32px; padding: 24px; box-shadow: 0 12px 24px rgba(40, 100, 60, 0.1); border: 1px solid #c0ddcb; }
-        .input-card h2, .output-card h2 { font-size: 1.4rem; font-weight: 650; color: #0c4f2b; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-        .param-slider { margin-bottom: 22px; }
-        .param-slider label { display: flex; justify-content: space-between; font-weight: 500; color: #25563b; }
-        input[type=range] { width: 100%; height: 8px; background: #d0e8da; border-radius: 10px; -webkit-appearance: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; background: #2b8555; border-radius: 50%; cursor: pointer; border: 3px solid white; box-shadow: 0 2px 8px #0a4f28; }
-        .extra-input { display: flex; gap: 12px; margin-top: 15px; flex-wrap: wrap; }
-        .extra-input .input-badge { background: #e9f5ef; border-radius: 40px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; border: 1px solid #a0cfb5; }
-        .input-badge input { border: none; background: transparent; width: 70px; text-align: right; font-weight: 600; color: #1a4f31; outline: none; }
-        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 20px 0; }
-        .metric-box { background: #e9f5f0; border-radius: 28px; padding: 18px; text-align: center; border: 1px solid #b7dbc9; }
-        .metric-box .value { font-size: 2.4rem; font-weight: 700; color: #0b4e2b; line-height: 1.1; }
+        /* 主区域：输入+输出 */
+        .main-panel {
+            display: grid;
+            grid-template-columns: 1.2fr 1.8fr;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+        .input-card, .output-card {
+            background: white;
+            border-radius: 32px;
+            padding: 24px;
+            box-shadow: 0 12px 24px rgba(40, 100, 60, 0.1);
+            border: 1px solid #c0ddcb;
+        }
+        .input-card h2, .output-card h2 {
+            font-size: 1.4rem;
+            font-weight: 650;
+            color: #0c4f2b;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .param-slider {
+            margin-bottom: 22px;
+        }
+        .param-slider label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 500;
+            color: #25563b;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 8px;
+            background: #d0e8da;
+            border-radius: 10px;
+            -webkit-appearance: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            background: #2b8555;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px #0a4f28;
+        }
+        .extra-input {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .extra-input .input-badge {
+            background: #e9f5ef;
+            border-radius: 40px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #a0cfb5;
+        }
+        .input-badge input {
+            border: none;
+            background: transparent;
+            width: 70px;
+            text-align: right;
+            font-weight: 600;
+            color: #1a4f31;
+            outline: none;
+        }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin: 20px 0;
+        }
+        .metric-box {
+            background: #e9f5f0;
+            border-radius: 28px;
+            padding: 18px;
+            text-align: center;
+            border: 1px solid #b7dbc9;
+        }
+        .metric-box .value {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #0b4e2b;
+            line-height: 1.1;
+        }
         .metric-box .unit { font-size: 0.9rem; color: #4f7b64; }
         .metric-box .label { font-size: 0.9rem; color: #276945; font-weight: 500; margin-top: 6px; }
-        .recommend-bar { background: #daf1e4; border-radius: 60px; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px; }
-        .recommend-text { font-weight: 600; color: #0e4829; font-size: 1.2rem; }
-        .badge-opt { background: #2f855a; color: white; padding: 8px 24px; border-radius: 60px; font-weight: 700; font-size: 1.5rem; }
-        .weight-panel { background: #e9f5ef; border-radius: 32px; padding: 18px 20px; margin: 20px 0 15px; border: 1px dashed #2f855a; }
-        .weight-title { font-weight: 600; color: #0e4829; margin-bottom: 15px; font-size: 1.1rem; }
-        .weight-slider { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .weight-slider label { width: 100px; font-size: 0.95rem; color: #1e4b2f; }
-        .weight-slider input { flex: 1; }
-        .weight-slider span { width: 50px; text-align: right; font-weight: 600; color: #0b4e2b; }
-        .btn-preset { background: #e2f0e8; border: 1px solid #a0cfb5; border-radius: 20px; padding: 6px 12px; margin-right: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
-        .btn-preset:hover { background: #c7e5d4; }
-        .action-buttons { display: flex; gap: 15px; margin-top: 20px; }
-        .btn-primary { background: #2f855a; color: white; border: none; border-radius: 60px; padding: 16px 32px; font-weight: 600; flex: 1; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.15s; }
+        .recommend-bar {
+            background: #daf1e4;
+            border-radius: 60px;
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 20px 0 10px;
+        }
+        .recommend-text {
+            font-weight: 600;
+            color: #0e4829;
+            font-size: 1.2rem;
+        }
+        .badge-opt {
+            background: #2f855a;
+            color: white;
+            padding: 8px 24px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        /* 权重面板 */
+        .weight-panel {
+            background: #e9f5ef;
+            border-radius: 32px;
+            padding: 18px 20px;
+            margin: 20px 0 15px;
+            border: 1px dashed #2f855a;
+        }
+        .weight-title {
+            font-weight: 600;
+            color: #0e4829;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        .weight-slider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .weight-slider label {
+            width: 100px;
+            font-size: 0.95rem;
+            color: #1e4b2f;
+        }
+        .weight-slider input {
+            flex: 1;
+        }
+        .weight-slider span {
+            width: 50px;
+            text-align: right;
+            font-weight: 600;
+            color: #0b4e2b;
+        }
+        .btn-preset {
+            background: #e2f0e8;
+            border: 1px solid #a0cfb5;
+            border-radius: 20px;
+            padding: 6px 12px;
+            margin-right: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .btn-preset:hover {
+            background: #c7e5d4;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .btn-primary {
+            background: #2f855a;
+            color: white;
+            border: none;
+            border-radius: 60px;
+            padding: 16px 32px;
+            font-weight: 600;
+            flex: 1;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: 0.15s;
+        }
         .btn-primary:hover { background: #276749; }
-        .btn-secondary { background: transparent; border: 2px solid #2f855a; color: #2f855a; border-radius: 60px; padding: 16px 32px; font-weight: 600; flex: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid #2f855a;
+            color: #2f855a;
+            border-radius: 60px;
+            padding: 16px 32px;
+            font-weight: 600;
+            flex: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
         .btn-secondary:hover { background: #ebf7f0; }
-        .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px; }
-        .chart-card { background: white; border-radius: 32px; padding: 20px; border: 1px solid #c0ddcb; }
-        .chart-card h3 { color: #175232; margin-bottom: 15px; font-weight: 600; }
-        .validation-footer { margin-top: 30px; padding: 12px 20px; background: #d9ead9; border-radius: 60px; text-align: center; color: #2d5a3c; }
-        .footer-note { text-align: center; color: #3b7452; font-size: 0.85rem; margin-top: 20px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 30, 10, 0.6); backdrop-filter: blur(8px); align-items: center; justify-content: center; z-index: 2000; }
-        .modal.show { display: flex; }
-        .modal-content { background: white; border-radius: 40px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 30px; box-shadow: 0 30px 60px rgba(0, 40, 0, 0.5); border: 2px solid #b2d3bb; position: relative; }
-        .modal-close { position: absolute; top: 20px; right: 25px; font-size: 1.8rem; color: #2d5a3c; cursor: pointer; background: #e2f0e8; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .modal-close:hover { background: #c7e5d4; }
-        .modal-body { margin-top: 15px; }
-        .param-table { width: 100%; border-collapse: collapse; background: #f5fbf7; border-radius: 20px; overflow: hidden; }
-        .param-table td { padding: 12px 16px; border-bottom: 1px solid #b7dbc9; }
+        /* 图表区域 */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+        .chart-card {
+            background: white;
+            border-radius: 32px;
+            padding: 20px;
+            border: 1px solid #c0ddcb;
+        }
+        .chart-card h3 {
+            color: #175232;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        /* 验证信息 */
+        .validation-footer {
+            margin-top: 30px;
+            padding: 12px 20px;
+            background: #d9ead9;
+            border-radius: 60px;
+            text-align: center;
+            color: #2d5a3c;
+        }
+        .footer-note {
+            text-align: center;
+            color: #3b7452;
+            font-size: 0.85rem;
+            margin-top: 20px;
+        }
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 30, 10, 0.6);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 30px;
+            box-shadow: 0 30px 60px rgba(0, 40, 0, 0.5);
+            border: 2px solid #b2d3bb;
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 1.8rem;
+            color: #2d5a3c;
+            cursor: pointer;
+            background: #e2f0e8;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .modal-close:hover {
+            background: #c7e5d4;
+        }
+        .modal-body {
+            margin-top: 15px;
+        }
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #f5fbf7;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        .param-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #b7dbc9;
+        }
         .param-table tr:last-child td { border-bottom: none; }
-        #csvUpload { display: none; }
-        #batchTable th, #batchTable td { border-bottom: 1px solid #c0ddcb; padding: 8px 12px; text-align: center; }
-        #batchTable th { background: #e2f0e8; font-weight: 600; }
+        /* 文件上传隐藏 input */
+        #csvUpload {
+            display: none;
+        }
+        /* 批量结果表格样式 */
+        #batchTable th, #batchTable td {
+            border-bottom: 1px solid #c0ddcb;
+            padding: 8px 12px;
+            text-align: center;
+        }
+        #batchTable th {
+            background: #e2f0e8;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -337,7 +708,7 @@
                 <table id="batchTable" style="width:100%; border-collapse:collapse;">
                     <thead>
                         <tr><th>掺烧比例</th><th>含水率</th><th>热值</th><th>挥发分</th><th>灰分</th><th>炉膛温度</th>
-                            <th>煤耗率(g/kWh)</th><th>碳排放(tCO2/MWh)</th><th>成本(元/kWh)</th>
+                            <th>煤耗率(g/kWh)</th><th>碳排放(tCO₂/MWh)</th><th>成本(元/kWh)</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -361,528 +732,570 @@
     </div>
 
     <script>
-        // *************** 封面按钮独立绑定（确保可靠） ***************
-        (function initCover() {
-            const cover = document.getElementById('cover');
-            const dashboard = document.getElementById('dashboard');
-            const enterBtn = document.getElementById('enterBtn');
-            if (enterBtn && cover && dashboard) {
-                enterBtn.addEventListener('click', function() {
-                    cover.classList.add('hidden');
-                    dashboard.classList.add('visible');
-                });
-            } else {
-                console.warn('封面元素未找到，请检查 HTML');
+    (function() {
+        // 后端地址配置
+        const BACKEND_URL = 'http://127.0.0.1:5000';
+        let usingMockData = true;
+        let paretoSolutions = [];
+        let hasRealOptimization = false;
+
+        // DOM 元素
+        const mixSlider = document.getElementById('mixSlider');
+        const moistSlider = document.getElementById('moistSlider');
+        const heatSlider = document.getElementById('heatSlider');
+        const tempSlider = document.getElementById('tempSlider');
+        const mixVal = document.getElementById('mixVal');
+        const moistVal = document.getElementById('moistVal');
+        const heatVal = document.getElementById('heatVal');
+        const tempVal = document.getElementById('tempVal');
+        const volatileInput = document.getElementById('volatile');
+        const ashInput = document.getElementById('ash');
+        const citySelect = document.getElementById('citySelect');
+        const wasteSelect = document.getElementById('wasteTypeSelect');
+        const preEff = document.getElementById('preEff');
+        const preNOx = document.getElementById('preNOx');
+        const preCO2 = document.getElementById('preCO2');
+        const preCost = document.getElementById('preCost');
+        const optRatio = document.getElementById('optRatio');
+
+        const weightCarbon = document.getElementById('weightCarbon');
+        const weightCost = document.getElementById('weightCost');
+        const weightCoal = document.getElementById('weightCoal');
+        const weightCarbonVal = document.getElementById('weightCarbonVal');
+        const weightCostVal = document.getElementById('weightCostVal');
+        const weightCoalVal = document.getElementById('weightCoalVal');
+        const weightSumSpan = document.getElementById('weightSum');
+
+        let pollChart, pareChart;
+
+        // 模拟生成帕累托解集
+        function generateMockPareto() {
+            let mixBase = parseFloat(mixSlider.value);
+            let moisture = parseFloat(moistSlider.value);
+            let heatIn = parseFloat(heatSlider.value);
+            let volatile = parseFloat(volatileInput.value) || 38;
+            let ash = parseFloat(ashInput.value) || 32;
+            let temp = parseFloat(tempSlider.value) || 850;
+            let solutions = [];
+            for (let i = 0; i < 30; i++) {
+                let mix = 5 + Math.random() * 10;
+                let airPrimary = 40 + Math.random() * 40;
+                let airSecondary = 10 + Math.random() * 30;
+                let coal = 310 + 0.8 * mix + 0.2 * (moisture - 30) - 0.01 * (heatIn - 2800) + Math.random() * 5;
+                let carbon = 0.75 + 0.008 * mix + 0.003 * (moisture - 30) - 0.0001 * (heatIn - 2800) + Math.random() * 0.05;
+                let cost = 220 + 1.5 * mix + 0.6 * (moisture - 30) - 0.03 * (heatIn - 2800) + Math.random() * 10;
+                solutions.push({ mix, coal_rate: coal, carbon, cost, air_primary: airPrimary, air_secondary: airSecondary });
             }
-        })();
+            solutions.sort((a,b) => a.cost - b.cost);
+            return solutions;
+        }
 
-        // *************** 主逻辑（使用自执行函数，避免全局污染） ***************
-        (function() {
-            // 后端地址配置
-            const BACKEND_URL = 'http://127.0.0.1:5000';
-            let usingMockData = true;
-            let paretoSolutions = [];
-            let hasRealOptimization = false;
+        // 根据权重选择最优解
+        function selectBestByWeights() {
+            let wCarbon = parseFloat(weightCarbon.value);
+            let wCost = parseFloat(weightCost.value);
+            let wCoal = parseFloat(weightCoal.value);
+            let sum = wCarbon + wCost + wCoal;
+            if (sum === 0) sum = 1;
+            wCarbon /= sum;
+            wCost /= sum;
+            wCoal /= sum;
 
-            // DOM 元素
-            const mixSlider = document.getElementById('mixSlider');
-            const moistSlider = document.getElementById('moistSlider');
-            const heatSlider = document.getElementById('heatSlider');
-            const tempSlider = document.getElementById('tempSlider');
-            const mixVal = document.getElementById('mixVal');
-            const moistVal = document.getElementById('moistVal');
-            const heatVal = document.getElementById('heatVal');
-            const tempVal = document.getElementById('tempVal');
-            const volatileInput = document.getElementById('volatile');
-            const ashInput = document.getElementById('ash');
-            const citySelect = document.getElementById('citySelect');
-            const wasteSelect = document.getElementById('wasteTypeSelect');
-            const preEff = document.getElementById('preEff');
-            const preNOx = document.getElementById('preNOx');
-            const preCO2 = document.getElementById('preCO2');
-            const preCost = document.getElementById('preCost');
-            const optRatio = document.getElementById('optRatio');
+            if (!paretoSolutions || paretoSolutions.length === 0) return null;
 
-            const weightCarbon = document.getElementById('weightCarbon');
-            const weightCost = document.getElementById('weightCost');
-            const weightCoal = document.getElementById('weightCoal');
-            const weightCarbonVal = document.getElementById('weightCarbonVal');
-            const weightCostVal = document.getElementById('weightCostVal');
-            const weightCoalVal = document.getElementById('weightCoalVal');
-            const weightSumSpan = document.getElementById('weightSum');
+            let minCarbon = Math.min(...paretoSolutions.map(p => p.carbon));
+            let maxCarbon = Math.max(...paretoSolutions.map(p => p.carbon));
+            let minCost = Math.min(...paretoSolutions.map(p => p.cost));
+            let maxCost = Math.max(...paretoSolutions.map(p => p.cost));
+            let minCoal = Math.min(...paretoSolutions.map(p => p.coal_rate));
+            let maxCoal = Math.max(...paretoSolutions.map(p => p.coal_rate));
 
-            let pollChart, pareChart;
-
-            // 模拟生成帕累托解集
-            function generateMockPareto() {
-                let mixBase = parseFloat(mixSlider.value);
-                let moisture = parseFloat(moistSlider.value);
-                let heatIn = parseFloat(heatSlider.value);
-                let volatile = parseFloat(volatileInput.value) || 38;
-                let ash = parseFloat(ashInput.value) || 32;
-                let temp = parseFloat(tempSlider.value) || 850;
-                let solutions = [];
-                for (let i = 0; i < 30; i++) {
-                    let mix = 5 + Math.random() * 10;
-                    let airPrimary = 40 + Math.random() * 40;
-                    let airSecondary = 10 + Math.random() * 30;
-                    let coal = 310 + 0.8 * mix + 0.2 * (moisture - 30) - 0.01 * (heatIn - 2800) + Math.random() * 5;
-                    let carbon = 0.75 + 0.008 * mix + 0.003 * (moisture - 30) - 0.0001 * (heatIn - 2800) + Math.random() * 0.05;
-                    let cost = 220 + 1.5 * mix + 0.6 * (moisture - 30) - 0.03 * (heatIn - 2800) + Math.random() * 10;
-                    solutions.push({ mix, coal_rate: coal, carbon, cost, air_primary: airPrimary, air_secondary: airSecondary });
+            let best = null;
+            let bestScore = -Infinity;
+            paretoSolutions.forEach(p => {
+                let carbonNorm = (maxCarbon - p.carbon) / (maxCarbon - minCarbon || 1);
+                let costNorm = (maxCost - p.cost) / (maxCost - minCost || 1);
+                let coalNorm = (maxCoal - p.coal_rate) / (maxCoal - minCoal || 1);
+                let score = wCarbon * carbonNorm + wCost * costNorm + wCoal * coalNorm;
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = p;
                 }
-                solutions.sort((a,b) => a.cost - b.cost);
-                return solutions;
-            }
+            });
+            return best;
+        }
 
-            function updateParetoChart() {
-                if (!pareChart) return;
-                const data = paretoSolutions.map(p => [p.cost, p.carbon]);
-                let best = selectBestByWeights();
-                let highlightData = best ? [[best.cost, best.carbon]] : [];
-                pareChart.setOption({
-                    tooltip: { trigger: 'item', formatter: '成本: {c[0]} 元/吨<br>碳排放: {c[1]} tCO₂/MWh' },
-                    grid: { left: '12%', right: '8%', top: '10%', bottom: '15%' },
-                    xAxis: { type: 'value', name: '运行成本 (元/吨)' },
-                    yAxis: { type: 'value', name: '碳排放 (tCO₂/MWh)' },
-                    series: [
-                        { name: '帕累托解', type: 'scatter', data: data, symbolSize: 8, itemStyle: { color: '#2f855a' } },
-                        { name: '推荐解', type: 'scatter', data: highlightData, symbolSize: 14, itemStyle: { color: '#ffaa00', borderColor: '#ffffff', borderWidth: 2 } }
-                    ]
-                }, true);
+        // 更新显示推荐值
+        function updateDisplayFromWeight() {
+            let best = selectBestByWeights();
+            if (best) {
+                optRatio.innerText = best.mix.toFixed(1) + '%';
+                preCost.innerText = best.cost.toFixed(1);
+                preCO2.innerText = best.carbon.toFixed(3);
+                preEff.innerText = best.coal_rate.toFixed(1);
             }
+        }
 
-            function selectBestByWeights() {
-                let wCarbon = parseFloat(weightCarbon.value);
-                let wCost = parseFloat(weightCost.value);
-                let wCoal = parseFloat(weightCoal.value);
-                let sum = wCarbon + wCost + wCoal;
-                if (sum === 0) sum = 1;
-                wCarbon /= sum;
-                wCost /= sum;
-                wCoal /= sum;
-                if (!paretoSolutions || paretoSolutions.length === 0) return null;
-                let minCarbon = Math.min(...paretoSolutions.map(p => p.carbon));
-                let maxCarbon = Math.max(...paretoSolutions.map(p => p.carbon));
-                let minCost = Math.min(...paretoSolutions.map(p => p.cost));
-                let maxCost = Math.max(...paretoSolutions.map(p => p.cost));
-                let minCoal = Math.min(...paretoSolutions.map(p => p.coal_rate));
-                let maxCoal = Math.max(...paretoSolutions.map(p => p.coal_rate));
-                let best = null;
-                let bestScore = -Infinity;
-                paretoSolutions.forEach(p => {
-                    let carbonNorm = (maxCarbon - p.carbon) / (maxCarbon - minCarbon || 1);
-                    let costNorm = (maxCost - p.cost) / (maxCost - minCost || 1);
-                    let coalNorm = (maxCoal - p.coal_rate) / (maxCoal - minCoal || 1);
-                    let score = wCarbon * carbonNorm + wCost * costNorm + wCoal * coalNorm;
-                    if (score > bestScore) {
-                        bestScore = score;
-                        best = p;
-                    }
-                });
-                return best;
-            }
+        // 回退模拟预测
+        function fallbackSimulation() {
+            preEff.innerText = '91.3';
+            preCO2.innerText = '0.82';
+            preCost.innerText = '236.5';
+            optRatio.innerText = '8.2%';
+        }
 
-            function updateDisplayFromWeight() {
-                let best = selectBestByWeights();
-                if (best) {
-                    optRatio.innerText = best.mix.toFixed(1) + '%';
-                    preCost.innerText = best.cost.toFixed(1);
-                    preCO2.innerText = best.carbon.toFixed(3);
-                    preEff.innerText = best.coal_rate.toFixed(1);
-                }
-            }
+        // 更新预测
+        async function updatePredictions() {
+            mixVal.innerText = mixSlider.value + '%';
+            moistVal.innerText = moistSlider.value + '%';
+            heatVal.innerText = heatSlider.value + ' kJ/kg';
+            tempVal.innerText = tempSlider.value + ' ℃';
 
-            function fallbackSimulation() {
-                preEff.innerText = '91.3';
-                preCO2.innerText = '0.82';
-                preCost.innerText = '236.5';
-                optRatio.innerText = '8.2%';
-            }
-
-            async function updatePredictions() {
-                mixVal.innerText = mixSlider.value + '%';
-                moistVal.innerText = moistSlider.value + '%';
-                heatVal.innerText = heatSlider.value + ' kJ/kg';
-                tempVal.innerText = tempSlider.value + ' ℃';
-                const params = {
-                    mix_ratio: parseFloat(mixSlider.value),
-                    moisture: parseFloat(moistSlider.value),
-                    heat_value: parseFloat(heatSlider.value),
-                    volatile: parseFloat(volatileInput.value) || 38,
-                    ash: parseFloat(ashInput.value) || 32,
-                    temp_furnace: parseFloat(tempSlider.value) || 850
-                };
-                if (!usingMockData) {
-                    try {
-                        const response = await fetch(`${BACKEND_URL}/predict`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(params)
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            preEff.innerText = result.coal_consumption.toFixed(1);
-                            preCO2.innerText = result.carbon_emission.toFixed(3);
-                            preCost.innerText = result.operating_cost.toFixed(3);
-                            optRatio.innerText = result.recommended_ratio.toFixed(1) + '%';
-                            return;
-                        } else {
-                            console.warn('后端预测错误:', result);
-                        }
-                    } catch (err) {
-                        console.warn('预测请求失败，切换到模拟模式:', err);
-                        usingMockData = true;
-                    }
-                }
-                fallbackSimulation();
-            }
-
-            function updateWeightDisplay() {
-                let w1 = parseFloat(weightCarbon.value);
-                let w2 = parseFloat(weightCost.value);
-                let w3 = parseFloat(weightCoal.value);
-                weightCarbonVal.innerText = w1.toFixed(2);
-                weightCostVal.innerText = w2.toFixed(2);
-                weightCoalVal.innerText = w3.toFixed(2);
-                let sum = w1 + w2 + w3;
-                weightSumSpan.innerText = sum.toFixed(2);
-                updateDisplayFromWeight();
-            }
-
-            window.setWeights = function(wCarbon, wCost, wCoal) {
-                weightCarbon.value = wCarbon;
-                weightCost.value = wCost;
-                weightCoal.value = wCoal;
-                updateWeightDisplay();
+            const params = {
+                mix_ratio: parseFloat(mixSlider.value),
+                moisture: parseFloat(moistSlider.value),
+                heat_value: parseFloat(heatSlider.value),
+                volatile: parseFloat(volatileInput.value) || 38,
+                ash: parseFloat(ashInput.value) || 32,
+                temp_furnace: parseFloat(tempSlider.value) || 850
             };
 
-            function showSolutionDetails(solution) {
-                const modal = document.getElementById('detailModal');
-                const modalTitle = document.getElementById('modalTitle');
-                const modalBody = document.getElementById('modalBody');
-                modalTitle.innerHTML = '<i class="fas fa-chart-bar"></i> 帕累托解详情';
-                modalBody.innerHTML = '';
-                const table = document.createElement('table');
-                table.className = 'param-table';
-                const rows = [
-                    ['掺烧比例', solution.mix.toFixed(1) + '%'],
-                    ['一次风配比', (solution.air_primary || 'N/A') + '%'],
-                    ['二次风配比', (solution.air_secondary || 'N/A') + '%'],
-                    ['煤耗率', solution.coal_rate.toFixed(2) + ' g/kWh'],
-                    ['碳排放', solution.carbon.toFixed(4) + ' tCO₂/MWh'],
-                    ['运行成本', solution.cost.toFixed(2) + ' 元/吨']
-                ];
-                rows.forEach(row => {
-                    const tr = document.createElement('tr');
-                    const td1 = document.createElement('td');
-                    td1.textContent = row[0];
-                    const td2 = document.createElement('td');
-                    td2.textContent = row[1];
-                    tr.appendChild(td1);
-                    tr.appendChild(td2);
-                    table.appendChild(tr);
-                });
-                modalBody.appendChild(table);
-                modal.classList.add('show');
-            }
-
-            function initCharts() {
-                pollChart = echarts.init(document.getElementById('pollChart'));
-                pareChart = echarts.init(document.getElementById('pareChart'));
-                pollChart.setOption({
-                    tooltip: { trigger: 'axis' },
-                    legend: { bottom: 5, data: ['NOx', 'SO₂'] },
-                    grid: { left: '12%', right: '8%', top: '15%', bottom: '20%', containLabel: true },
-                    xAxis: { type: 'category', data: ['0%', '4%', '8%', '12%', '16%', '20%'], name: '掺烧比例' },
-                    yAxis: { type: 'value', name: '浓度 (mg/m³)', min: 0, max: 250 },
-                    series: [
-                        { name: 'NOx', type: 'line', data: [160, 168, 175, 186, 198, 215], color: '#2f855a', smooth: true },
-                        { name: 'SO₂', type: 'line', data: [200, 205, 212, 220, 232, 245], color: '#d97706', smooth: true }
-                    ]
-                });
-                pareChart.on('click', function(params) {
-                    if (params.componentType === 'series' && params.dataIndex !== undefined && params.seriesName === '帕累托解') {
-                        let solution = paretoSolutions[params.dataIndex];
-                        if (solution) showSolutionDetails(solution);
+            if (!usingMockData) {
+                try {
+                    const response = await fetch(`${BACKEND_URL}/predict`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(params)
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        preEff.innerText = result.coal_consumption.toFixed(1);
+                        preCO2.innerText = result.carbon_emission.toFixed(3);
+                        preCost.innerText = result.operating_cost.toFixed(3);
+                        optRatio.innerText = result.recommended_ratio.toFixed(1) + '%';
+                        return;
+                    } else {
+                        console.warn('后端预测错误:', result);
                     }
-                });
+                } catch (err) {
+                    console.warn('预测请求失败，切换到模拟模式:', err);
+                    usingMockData = true;
+                }
+            }
+            fallbackSimulation();
+        }
+
+        // 权重变化处理
+        function updateWeightDisplay() {
+            let w1 = parseFloat(weightCarbon.value);
+            let w2 = parseFloat(weightCost.value);
+            let w3 = parseFloat(weightCoal.value);
+            weightCarbonVal.innerText = w1.toFixed(2);
+            weightCostVal.innerText = w2.toFixed(2);
+            weightCoalVal.innerText = w3.toFixed(2);
+            let sum = w1 + w2 + w3;
+            weightSumSpan.innerText = sum.toFixed(2);
+            updateDisplayFromWeight();
+        }
+
+        window.setWeights = function(wCarbon, wCost, wCoal) {
+            weightCarbon.value = wCarbon;
+            weightCost.value = wCost;
+            weightCoal.value = wCoal;
+            updateWeightDisplay();
+        };
+
+        // 显示解详情
+        function showSolutionDetails(solution) {
+            const modal = document.getElementById('detailModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            modalTitle.innerHTML = '<i class="fas fa-chart-bar"></i> 帕累托解详情';
+            modalBody.innerHTML = '';
+            const table = document.createElement('table');
+            table.className = 'param-table';
+            const rows = [
+                ['掺烧比例', solution.mix.toFixed(1) + '%'],
+                ['一次风配比', (solution.air_primary || 'N/A') + '%'],
+                ['二次风配比', (solution.air_secondary || 'N/A') + '%'],
+                ['煤耗率', solution.coal_rate.toFixed(2) + ' g/kWh'],
+                ['碳排放', solution.carbon.toFixed(4) + ' tCO₂/MWh'],
+                ['运行成本', solution.cost.toFixed(2) + ' 元/吨']
+            ];
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+                const td1 = document.createElement('td');
+                td1.textContent = row[0];
+                const td2 = document.createElement('td');
+                td2.textContent = row[1];
+                tr.appendChild(td1);
+                tr.appendChild(td2);
+                table.appendChild(tr);
+            });
+            modalBody.appendChild(table);
+            modal.classList.add('show');
+        }
+
+        // 更新帕累托图
+        function updateParetoChart() {
+            if (!pareChart) return;
+            const data = paretoSolutions.map(p => [p.cost, p.carbon]);
+            let best = selectBestByWeights();
+            let highlightData = best ? [[best.cost, best.carbon]] : [];
+            pareChart.setOption({
+                tooltip: { trigger: 'item', formatter: '成本: {c[0]} 元/吨<br>碳排放: {c[1]} tCO₂/MWh' },
+                grid: { left: '15%', right: '8%', top: '15%', bottom: '15%', containLabel: true },
+                xAxis: {
+                    type: 'value',
+                    name: '运行成本 (元/吨)',
+                    nameTextStyle: { fontSize: 14, fontWeight: 'bold', color: '#1e3e2c' },
+                    axisLabel: { fontSize: 12, color: '#2c5a3e' },
+                    axisLine: { lineStyle: { color: '#2f855a' } },
+                    splitLine: { show: true, lineStyle: { color: '#d9ead9', type: 'dashed' } },
+                    min: function(value) { return value.min - (value.max - value.min) * 0.05; },
+                    max: function(value) { return value.max + (value.max - value.min) * 0.05; }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '碳排放 (tCO₂/MWh)',
+                    nameTextStyle: { fontSize: 14, fontWeight: 'bold', color: '#1e3e2c' },
+                    axisLabel: { fontSize: 12, color: '#2c5a3e' },
+                    axisLine: { lineStyle: { color: '#2f855a' } },
+                    splitLine: { show: true, lineStyle: { color: '#d9ead9', type: 'dashed' } },
+                    min: function(value) { return value.min - (value.max - value.min) * 0.05; },
+                    max: function(value) { return value.max + (value.max - value.min) * 0.05; }
+                },
+                series: [
+                    {
+                        name: '帕累托解',
+                        type: 'scatter',
+                        data: data,
+                        symbolSize: 8,
+                        itemStyle: { color: '#2f855a', opacity: 0.7 }
+                    },
+                    {
+                        name: '推荐解',
+                        type: 'scatter',
+                        data: highlightData,
+                        symbolSize: 14,
+                        itemStyle: { color: '#ffaa00', borderColor: '#ffffff', borderWidth: 2 }
+                    }
+                ]
+            }, true);
+        }
+
+        // 初始化图表
+        function initCharts() {
+            pollChart = echarts.init(document.getElementById('pollChart'));
+            pareChart = echarts.init(document.getElementById('pareChart'));
+
+            pollChart.setOption({
+                tooltip: { trigger: 'axis' },
+                legend: { bottom: 5, data: ['NOx', 'SO₂'] },
+                grid: { left: '12%', right: '8%', top: '15%', bottom: '20%', containLabel: true },
+                xAxis: { type: 'category', data: ['0%', '4%', '8%', '12%', '16%', '20%'], name: '掺烧比例' },
+                yAxis: { type: 'value', name: '浓度 (mg/m³)', min: 0, max: 250 },
+                series: [
+                    { name: 'NOx', type: 'line', data: [160, 168, 175, 186, 198, 215], color: '#2f855a', smooth: true },
+                    { name: 'SO₂', type: 'line', data: [200, 205, 212, 220, 232, 245], color: '#d97706', smooth: true }
+                ]
+            });
+
+            pareChart.on('click', function(params) {
+                if (params.componentType === 'series' && params.dataIndex !== undefined && params.seriesName === '帕累托解') {
+                    let solution = paretoSolutions[params.dataIndex];
+                    if (solution) showSolutionDetails(solution);
+                }
+            });
+
+            paretoSolutions = generateMockPareto();
+            updateParetoChart();
+        }
+
+        // 上传功能
+        const csvUploadInput = document.getElementById('csvUpload');
+        document.getElementById('uploadTrigger').addEventListener('click', () => csvUploadInput.click());
+
+        csvUploadInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const uploadBtn = document.getElementById('uploadTrigger');
+            const originalText = uploadBtn.innerHTML;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上传中...';
+            uploadBtn.disabled = true;
+            const formData = new FormData();
+            formData.append('file', file);
+            fetch(`${BACKEND_URL}/upload`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+                if (data.success) {
+                    const batchCard = document.getElementById('batchResultsCard');
+                    const tbody = document.querySelector('#batchTable tbody');
+                    tbody.innerHTML = '';
+                    data.data.forEach(row => {
+                        const tr = document.createElement('tr');
+                        const cells = [
+                            row.mix_ratio, row.moisture, row.heat_value,
+                            row.volatile, row.ash, row.temp_furnace,
+                            row.coal_consumption.toFixed(2),
+                            row.carbon_emission.toFixed(4),
+                            row.operating_cost.toFixed(4)
+                        ];
+                        cells.forEach(val => {
+                            const td = document.createElement('td');
+                            td.textContent = val;
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    });
+                    batchCard.style.display = 'block';
+                    batchCard.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert('上传失败：' + data.error);
+                }
+            })
+            .catch(error => {
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+                console.error('上传错误:', error);
+                alert('网络错误，请检查后端服务是否启动');
+            });
+            csvUploadInput.value = '';
+        });
+
+        // 流程卡片
+        document.querySelectorAll('.flow-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const module = this.dataset.module;
+                let title = '';
+                let contentGenerator = (chartDiv, table) => {
+                    if (module === 'preprocess') {
+                        title = '数据预处理详情';
+                        const chart = echarts.init(chartDiv);
+                        chart.setOption({ tooltip: {}, xAxis: { data: ['原始', '清洗后'] }, yAxis: {}, series: [{ type: 'bar', data: [85, 92], color: '#2f855a' }] });
+                        table.innerHTML = `<tr><td>异常值剔除</td><td>127条 (3.2%)</td></tr><tr><td>缺失值填补</td><td>线性插值</td></tr><tr><td>滤波方法</td><td>卡尔曼滤波</td></tr>`;
+                    } else if (module === 'predict') {
+                        title = '预测模型详情';
+                        const chart = echarts.init(chartDiv);
+                        chart.setOption({ tooltip: { trigger: 'axis' }, xAxis: { type: 'category', data: ['1h', '2h', '3h', '4h', '5h'] }, yAxis: { type: 'value' }, series: [{ name: '预测NOx', type: 'line', data: [165, 172, 180, 175, 168], color: '#2f855a' }] });
+                        table.innerHTML = `<tr><td>算法</td><td>LSTM (热值) / 随机森林 (排放)</td></tr><tr><td>训练RMSE</td><td>2.3%</td></tr><tr><td>特征数量</td><td>12个</td></tr>`;
+                    } else if (module === 'optimize') {
+                        title = '多目标优化详情';
+                        const chart = echarts.init(chartDiv);
+                        const optData = [];
+                        for (let i=0;i<20;i++) optData.push([210+Math.random()*40, 150+Math.random()*50]);
+                        chart.setOption({ tooltip: {}, xAxis: { type: 'value', name: '成本' }, yAxis: { type: 'value', name: '排放' }, series: [{ type: 'scatter', data: optData, color: '#2f855a' }] });
+                        table.innerHTML = `<tr><td>优化算法</td><td>NSGA-II</td></tr><tr><td>种群大小</td><td>100</td></tr><tr><td>迭代次数</td><td>200</td></tr><tr><td>帕累托解个数</td><td>${paretoSolutions.length}</td></tr>`;
+                    } else if (module === 'visual') {
+                        title = '可视化决策详情';
+                        const chart = echarts.init(chartDiv);
+                        chart.setOption({ tooltip: {}, series: [{ type: 'pie', data: [{ value: 62, name: '飞灰' }, { value: 30, name: '底渣' }, { value: 8, name: '烟气' }], color: ['#2f855a', '#4da1cf', '#9fc5e8'] }] });
+                        table.innerHTML = `<tr><td>当前推荐掺烧比</td><td>${optRatio.innerText}</td></tr><tr><td>预期减碳</td><td>2.4万吨/年</td></tr><tr><td>综合成本</td><td>${preCost.innerText} 元/吨</td></tr>`;
+                    }
+                };
+                function showModal(title, contentGenerator) {
+                    const modal = document.getElementById('detailModal');
+                    const modalTitle = document.getElementById('modalTitle');
+                    const modalBody = document.getElementById('modalBody');
+                    modalTitle.innerHTML = `<i class="fas fa-chart-bar"></i> ${title}`;
+                    modalBody.innerHTML = '';
+                    const chartDiv = document.createElement('div');
+                    chartDiv.className = 'detail-chart';
+                    modalBody.appendChild(chartDiv);
+                    const table = document.createElement('table');
+                    table.className = 'param-table';
+                    modalBody.appendChild(table);
+                    contentGenerator(chartDiv, table);
+                    modal.classList.add('show');
+                }
+                showModal(title, contentGenerator);
+            });
+        });
+
+        // 优化按钮
+        document.getElementById('runOptimBtn').addEventListener('click', async function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 优化计算中...';
+            btn.disabled = true;
+            try {
+                const params = {
+                    moisture: parseFloat(moistSlider.value),
+                    heat: parseFloat(heatSlider.value),
+                    volatile: parseFloat(volatileInput.value) || 38,
+                    ash: parseFloat(ashInput.value) || 32,
+                    weights: [
+                        parseFloat(weightCarbon.value),
+                        parseFloat(weightCost.value),
+                        parseFloat(weightCoal.value)
+                    ]
+                };
+                if (!usingMockData) {
+                    const response = await fetch(`${BACKEND_URL}/optimize`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(params)
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        const newSolutions = [];
+                        for (let i = 0; i < result.pareto_X.length; i++) {
+                            newSolutions.push({
+                                mix: result.pareto_X[i][0],
+                                air_primary: result.pareto_X[i][1],
+                                air_secondary: result.pareto_X[i][2],
+                                coal_rate: result.pareto_F[i][0],
+                                carbon: result.pareto_F[i][1],
+                                cost: result.pareto_F[i][2]
+                            });
+                        }
+                        paretoSolutions = newSolutions;
+                        hasRealOptimization = true;
+                        updateParetoChart();
+                        const best = selectBestByWeights();
+                        if (best) {
+                            optRatio.innerText = best.mix.toFixed(1) + '%';
+                            preCost.innerText = best.cost.toFixed(2);
+                            preCO2.innerText = best.carbon.toFixed(4);
+                            preEff.innerText = best.coal_rate.toFixed(2);
+                        } else if (result.recommended) {
+                            optRatio.innerText = result.recommended.mix_ratio.toFixed(1) + '%';
+                            preCost.innerText = result.recommended.cost.toFixed(2);
+                            preCO2.innerText = result.recommended.carbon.toFixed(4);
+                            preEff.innerText = result.recommended.coal_rate.toFixed(2);
+                        }
+                        alert(`优化完成，获得 ${paretoSolutions.length} 个帕累托解`);
+                        return;
+                    } else {
+                        console.warn('后端优化失败:', result);
+                    }
+                }
+                paretoSolutions = generateMockPareto();
+                hasRealOptimization = false;
+                updateParetoChart();
+                const best = selectBestByWeights();
+                if (best) {
+                    optRatio.innerText = best.mix.toFixed(1) + '%';
+                    preCost.innerText = best.cost.toFixed(2);
+                    preCO2.innerText = best.carbon.toFixed(4);
+                    preEff.innerText = best.coal_rate.toFixed(2);
+                }
+                alert(`模拟优化完成，获得 ${paretoSolutions.length} 个帕累托解（演示模式）`);
+            } catch (error) {
+                console.error('优化请求错误:', error);
+                alert('网络错误，请检查后端服务是否启动');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // 重置按钮
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            mixSlider.value = 8.2;
+            moistSlider.value = 34;
+            heatSlider.value = 2950;
+            volatileInput.value = 38;
+            ashInput.value = 32;
+            tempSlider.value = 850;
+            citySelect.value = '上海';
+            wasteSelect.value = '市政污泥';
+            paretoSolutions = generateMockPareto();
+            hasRealOptimization = false;
+            updateParetoChart();
+            updatePredictions();
+        });
+
+        // 滑块联动
+        function onSliderChange() {
+            updatePredictions();
+            if (!hasRealOptimization) {
                 paretoSolutions = generateMockPareto();
                 updateParetoChart();
             }
+        }
+        const sliders = [mixSlider, moistSlider, heatSlider, tempSlider, volatileInput, ashInput, citySelect, wasteSelect];
+        sliders.forEach(el => {
+            el.addEventListener('input', onSliderChange);
+            el.addEventListener('change', onSliderChange);
+        });
+        [weightCarbon, weightCost, weightCoal].forEach(s => s.addEventListener('input', updateWeightDisplay));
 
-            // 上传功能
-            const csvUploadInput = document.getElementById('csvUpload');
-            document.getElementById('uploadTrigger').addEventListener('click', () => csvUploadInput.click());
-            csvUploadInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                const uploadBtn = document.getElementById('uploadTrigger');
-                const originalText = uploadBtn.innerHTML;
-                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上传中...';
-                uploadBtn.disabled = true;
-                const formData = new FormData();
-                formData.append('file', file);
-                fetch(`${BACKEND_URL}/upload`, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    uploadBtn.innerHTML = originalText;
-                    uploadBtn.disabled = false;
-                    if (data.success) {
-                        const batchCard = document.getElementById('batchResultsCard');
-                        const tbody = document.querySelector('#batchTable tbody');
-                        tbody.innerHTML = '';
-                        data.data.forEach(row => {
-                            const tr = document.createElement('tr');
-                            const cells = [
-                                row.mix_ratio, row.moisture, row.heat_value,
-                                row.volatile, row.ash, row.temp_furnace,
-                                row.coal_consumption.toFixed(2),
-                                row.carbon_emission.toFixed(4),
-                                row.operating_cost.toFixed(4)
-                            ];
-                            cells.forEach(val => {
-                                const td = document.createElement('td');
-                                td.textContent = val;
-                                tr.appendChild(td);
-                            });
-                            tbody.appendChild(tr);
-                        });
-                        batchCard.style.display = 'block';
-                        batchCard.scrollIntoView({ behavior: 'smooth' });
-                    } else {
-                        alert('上传失败：' + data.error);
-                    }
-                })
-                .catch(error => {
-                    uploadBtn.innerHTML = originalText;
-                    uploadBtn.disabled = false;
-                    console.error('上传错误:', error);
-                    alert('网络错误，请检查后端服务是否启动');
-                });
-                csvUploadInput.value = '';
-            });
+        // 模态框关闭
+        const modal = document.getElementById('detailModal');
+        const modalClose = document.getElementById('modalClose');
+        modalClose.addEventListener('click', () => modal.classList.remove('show'));
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
 
-            // 流程卡片
-            document.querySelectorAll('.flow-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const module = this.dataset.module;
-                    let title = '';
-                    let contentGenerator = (chartDiv, table) => {
-                        if (module === 'preprocess') {
-                            title = '数据预处理详情';
-                            const chart = echarts.init(chartDiv);
-                            chart.setOption({ tooltip: {}, xAxis: { data: ['原始', '清洗后'] }, yAxis: {}, series: [{ type: 'bar', data: [85, 92], color: '#2f855a' }] });
-                            table.innerHTML = `<tr><td>异常值剔除</td><td>127条 (3.2%)</td></tr><tr><td>缺失值填补</td><td>线性插值</td></tr><tr><td>滤波方法</td><td>卡尔曼滤波</td></tr>`;
-                        } else if (module === 'predict') {
-                            title = '预测模型详情';
-                            const chart = echarts.init(chartDiv);
-                            chart.setOption({ tooltip: { trigger: 'axis' }, xAxis: { type: 'category', data: ['1h', '2h', '3h', '4h', '5h'] }, yAxis: { type: 'value' }, series: [{ name: '预测NOx', type: 'line', data: [165, 172, 180, 175, 168], color: '#2f855a' }] });
-                            table.innerHTML = `<tr><td>算法</td><td>LSTM (热值) / 随机森林 (排放)</td></tr><tr><td>训练RMSE</td><td>2.3%</td></tr><tr><td>特征数量</td><td>12个</td></tr>`;
-                        } else if (module === 'optimize') {
-                            title = '多目标优化详情';
-                            const chart = echarts.init(chartDiv);
-                            const optData = [];
-                            for (let i=0;i<20;i++) optData.push([210+Math.random()*40, 150+Math.random()*50]);
-                            chart.setOption({ tooltip: {}, xAxis: { type: 'value', name: '成本' }, yAxis: { type: 'value', name: '排放' }, series: [{ type: 'scatter', data: optData, color: '#2f855a' }] });
-                            table.innerHTML = `<tr><td>优化算法</td><td>NSGA-II</td></tr><tr><td>种群大小</td><td>100</td></tr><tr><td>迭代次数</td><td>200</td></tr><tr><td>帕累托解个数</td><td>${paretoSolutions.length}</td></tr>`;
-                        } else if (module === 'visual') {
-                            title = '可视化决策详情';
-                            const chart = echarts.init(chartDiv);
-                            chart.setOption({ tooltip: {}, series: [{ type: 'pie', data: [{ value: 62, name: '飞灰' }, { value: 30, name: '底渣' }, { value: 8, name: '烟气' }], color: ['#2f855a', '#4da1cf', '#9fc5e8'] }] });
-                            table.innerHTML = `<tr><td>当前推荐掺烧比</td><td>${optRatio.innerText}</td></tr><tr><td>预期减碳</td><td>2.4万吨/年</td></tr><tr><td>综合成本</td><td>${preCost.innerText} 元/吨</td></tr>`;
-                        }
-                    };
-                    function showModal(title, contentGenerator) {
-                        const modal = document.getElementById('detailModal');
-                        const modalTitle = document.getElementById('modalTitle');
-                        const modalBody = document.getElementById('modalBody');
-                        modalTitle.innerHTML = `<i class="fas fa-chart-bar"></i> ${title}`;
-                        modalBody.innerHTML = '';
-                        const chartDiv = document.createElement('div');
-                        chartDiv.className = 'detail-chart';
-                        modalBody.appendChild(chartDiv);
-                        const table = document.createElement('table');
-                        table.className = 'param-table';
-                        modalBody.appendChild(table);
-                        contentGenerator(chartDiv, table);
-                        modal.classList.add('show');
-                    }
-                    showModal(title, contentGenerator);
-                });
-            });
-
-            // 优化按钮
-            document.getElementById('runOptimBtn').addEventListener('click', async function() {
-                const btn = this;
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 优化计算中...';
-                btn.disabled = true;
-                try {
+        // 后端检测
+        async function checkBackend() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/`);
+                if (res.ok) {
+                    usingMockData = false;
+                    console.log('后端可用，使用真实数据');
                     const params = {
                         moisture: parseFloat(moistSlider.value),
                         heat: parseFloat(heatSlider.value),
                         volatile: parseFloat(volatileInput.value) || 38,
                         ash: parseFloat(ashInput.value) || 32,
-                        temp: parseFloat(tempSlider.value) || 850,
-                        weights: [
-                            parseFloat(weightCarbon.value),
-                            parseFloat(weightCost.value),
-                            parseFloat(weightCoal.value)
-                        ]
+                        weights: [0.33, 0.33, 0.34]
                     };
-                    if (!usingMockData) {
-                        const response = await fetch(`${BACKEND_URL}/optimize`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(params)
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            const newSolutions = [];
-                            for (let i = 0; i < result.pareto_X.length; i++) {
-                                newSolutions.push({
-                                    mix: result.pareto_X[i][0],
-                                    air_primary: result.pareto_X[i][1],
-                                    air_secondary: result.pareto_X[i][2],
-                                    coal_rate: result.pareto_F[i][0],
-                                    carbon: result.pareto_F[i][1],
-                                    cost: result.pareto_F[i][2]
-                                });
-                            }
-                            paretoSolutions = newSolutions;
-                            hasRealOptimization = true;
-                            updateParetoChart();
-                            const best = selectBestByWeights();
-                            if (best) {
-                                optRatio.innerText = best.mix.toFixed(1) + '%';
-                                preCost.innerText = best.cost.toFixed(2);
-                                preCO2.innerText = best.carbon.toFixed(4);
-                                preEff.innerText = best.coal_rate.toFixed(2);
-                            } else if (result.recommended) {
-                                optRatio.innerText = result.recommended.mix_ratio.toFixed(1) + '%';
-                                preCost.innerText = result.recommended.cost.toFixed(2);
-                                preCO2.innerText = result.recommended.carbon.toFixed(4);
-                                preEff.innerText = result.recommended.coal_rate.toFixed(2);
-                            }
-                            alert(`优化完成，获得 ${paretoSolutions.length} 个帕累托解`);
-                            return;
-                        } else {
-                            console.warn('后端优化失败:', result);
+                    const optRes = await fetch(`${BACKEND_URL}/optimize`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(params)
+                    });
+                    const optData = await optRes.json();
+                    if (optData.success) {
+                        const newSolutions = [];
+                        for (let i = 0; i < optData.pareto_X.length; i++) {
+                            newSolutions.push({
+                                mix: optData.pareto_X[i][0],
+                                air_primary: optData.pareto_X[i][1],
+                                air_secondary: optData.pareto_X[i][2],
+                                coal_rate: optData.pareto_F[i][0],
+                                carbon: optData.pareto_F[i][1],
+                                cost: optData.pareto_F[i][2]
+                            });
                         }
+                        paretoSolutions = newSolutions;
+                        hasRealOptimization = true;
+                        updateParetoChart();
+                        updateDisplayFromWeight();
                     }
-                    paretoSolutions = generateMockPareto();
-                    hasRealOptimization = false;
-                    updateParetoChart();
-                    const best = selectBestByWeights();
-                    if (best) {
-                        optRatio.innerText = best.mix.toFixed(1) + '%';
-                        preCost.innerText = best.cost.toFixed(2);
-                        preCO2.innerText = best.carbon.toFixed(4);
-                        preEff.innerText = best.coal_rate.toFixed(2);
-                    }
-                    alert(`模拟优化完成，获得 ${paretoSolutions.length} 个帕累托解（演示模式）`);
-                } catch (error) {
-                    console.error('优化请求错误:', error);
-                    alert('网络错误，请检查后端服务是否启动');
-                } finally {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                }
-            });
-
-            // 重置按钮
-            document.getElementById('resetBtn').addEventListener('click', function() {
-                mixSlider.value = 8.2;
-                moistSlider.value = 34;
-                heatSlider.value = 2950;
-                volatileInput.value = 38;
-                ashInput.value = 32;
-                tempSlider.value = 850;
-                citySelect.value = '上海';
-                wasteSelect.value = '市政污泥';
-                paretoSolutions = generateMockPareto();
-                hasRealOptimization = false;
-                updateParetoChart();
-                updatePredictions();
-            });
-
-            // 滑块联动
-            function onSliderChange() {
-                updatePredictions();
-                if (!hasRealOptimization) {
-                    paretoSolutions = generateMockPareto();
-                    updateParetoChart();
-                }
-            }
-            const sliders = [mixSlider, moistSlider, heatSlider, tempSlider, volatileInput, ashInput, citySelect, wasteSelect];
-            sliders.forEach(el => {
-                el.addEventListener('input', onSliderChange);
-                el.addEventListener('change', onSliderChange);
-            });
-            [weightCarbon, weightCost, weightCoal].forEach(s => s.addEventListener('input', updateWeightDisplay));
-
-            // 模态框关闭
-            const modal = document.getElementById('detailModal');
-            const modalClose = document.getElementById('modalClose');
-            modalClose.addEventListener('click', () => modal.classList.remove('show'));
-            modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
-
-            // 后端检测
-            async function checkBackend() {
-                try {
-                    const res = await fetch(`${BACKEND_URL}/`);
-                    if (res.ok) {
-                        usingMockData = false;
-                        console.log('后端可用，使用真实数据');
-                        const params = {
-                            moisture: parseFloat(moistSlider.value),
-                            heat: parseFloat(heatSlider.value),
-                            volatile: parseFloat(volatileInput.value) || 38,
-                            ash: parseFloat(ashInput.value) || 32,
-                            temp: parseFloat(tempSlider.value) || 850,
-                            weights: [0.33, 0.33, 0.34]
-                        };
-                        const optRes = await fetch(`${BACKEND_URL}/optimize`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(params)
-                        });
-                        const optData = await optRes.json();
-                        if (optData.success) {
-                            const newSolutions = [];
-                            for (let i = 0; i < optData.pareto_X.length; i++) {
-                                newSolutions.push({
-                                    mix: optData.pareto_X[i][0],
-                                    air_primary: optData.pareto_X[i][1],
-                                    air_secondary: optData.pareto_X[i][2],
-                                    coal_rate: optData.pareto_F[i][0],
-                                    carbon: optData.pareto_F[i][1],
-                                    cost: optData.pareto_F[i][2]
-                                });
-                            }
-                            paretoSolutions = newSolutions;
-                            hasRealOptimization = true;
-                            updateParetoChart();
-                            updateDisplayFromWeight();
-                        }
-                    } else {
-                        usingMockData = true;
-                        console.warn('后端响应异常，使用模拟数据');
-                    }
-                } catch (e) {
+                } else {
                     usingMockData = true;
-                    console.warn('后端不可用，使用模拟数据', e);
+                    console.warn('后端响应异常，使用模拟数据');
                 }
+            } catch (e) {
+                usingMockData = true;
+                console.warn('后端不可用，使用模拟数据', e);
             }
+        }
 
-            initCharts();
-            updatePredictions();
-            checkBackend();
-        })();
+        // 封面进入按钮（单独绑定，确保可用）
+        const enterBtn = document.getElementById('enterBtn');
+        const cover = document.getElementById('cover');
+        const dashboard = document.getElementById('dashboard');
+        if (enterBtn && cover && dashboard) {
+            enterBtn.addEventListener('click', function() {
+                cover.classList.add('hidden');
+                dashboard.classList.add('visible');
+            });
+        } else {
+            console.warn('封面元素未找到');
+        }
+
+        initCharts();
+        updatePredictions();
+        checkBackend();
+    })();
     </script>
 </body>
 </html>
