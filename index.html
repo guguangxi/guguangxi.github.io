@@ -436,10 +436,10 @@
             let maxCarbon = Math.max(...allCarbons);
             let costRange = maxCost - minCost;
             let carbonRange = maxCarbon - minCarbon;
-            let costMin = minCost - 0.1 * (costRange || 1);
-            let costMax = maxCost + 0.1 * (costRange || 1);
-            let carbonMin = minCarbon - 0.1 * (carbonRange || 1);
-            let carbonMax = maxCarbon + 0.1 * (carbonRange || 1);
+            let costMin = minCost - 0.2 * (costRange || 1);
+            let costMax = maxCost + 0.2 * (costRange || 1);
+            let carbonMin = minCarbon - 0.2 * (carbonRange || 1);
+            let carbonMax = maxCarbon + 0.2 * (carbonRange || 1);
 
             pareChart.setOption({
                 tooltip: { trigger: 'item', formatter: '成本: {c[0]} 元/kWh<br>碳排放: {c[1]} tCO₂/MWh' },
