@@ -82,6 +82,8 @@
       border: 1px solid rgba(110,160,120,0.3);
       display: none;
       transition: opacity 0.5s ease;
+      min-width: 0;
+      overflow: hidden;
     }
     .dashboard.visible { display: block; animation: fadeIn 0.6s ease; }
     .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; }
@@ -140,8 +142,11 @@
     .btn-primary:hover { background: #276749; }
     .btn-secondary { background: transparent; border: 2px solid #2f855a; color: #2f855a; border-radius: 60px; padding: 16px 32px; font-weight: 600; flex: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .btn-secondary:hover { background: #ebf7f0; }
-    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px; }
-    .chart-card { background: white; border-radius: 32px; padding: 20px; border: 1px solid #c0ddcb; }
+    .charts-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; margin-bottom: 30px; min-width: 0; }
+    .charts-row-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .charts-row > * { min-width: 0; }
+    .chart-card { background: white; border-radius: 32px; padding: 20px; border: 1px solid #c0ddcb; min-width: 0; overflow: hidden; }
+    @media (max-width: 1200px) { .charts-row, .charts-row-3 { grid-template-columns: 1fr; } }
     .chart-card h3 { color: #175232; margin-bottom: 15px; font-weight: 600; }
     .validation-footer { margin-top: 30px; padding: 12px 20px; background: #d9ead9; border-radius: 60px; text-align: center; color: #2d5a3c; }
     .footer-note { text-align: center; color: #3b7452; font-size: 0.85rem; margin-top: 20px; }
@@ -158,7 +163,7 @@
     #batchTable th, #batchTable td { border-bottom: 1px solid #c0ddcb; padding: 8px 12px; text-align: center; }
     #batchTable th { background: #e2f0e8; font-weight: 600; }
   </style>
-</head>
+<link rel="stylesheet" href="/Static/css/Global.css"/><link rel="stylesheet" href="/Web/css/Global.css"/><link rel="stylesheet" href="/Web/css/XYChatGPT.css"/><link rel="stylesheet" href="/Static/css/Global.css"/><link rel="stylesheet" href="/Web/css/Global.css"/><link rel="stylesheet" href="/Web/css/XYChatGPT.css"/><link rel="stylesheet" href="/Static/css/Global.css"/><link rel="stylesheet" href="/Web/css/Global.css"/><link rel="stylesheet" href="/Web/css/XYChatGPT.css"/><link rel="stylesheet" href="/Static/css/Global.css"/><link rel="stylesheet" href="/Web/css/Global.css"/><link rel="stylesheet" href="/Web/css/XYChatGPT.css"/><link rel="stylesheet" href="/Static/css/Global.css"/><link rel="stylesheet" href="/Web/css/Global.css"/><link rel="stylesheet" href="/Web/css/XYChatGPT.css"/><link rel="stylesheet" href="/Static/css/Global.css"/><link rel="stylesheet" href="/Web/css/Global.css"/><link rel="stylesheet" href="/Web/css/XYChatGPT.css"/></head>
 <body>
   <div class="cover" id="cover">
     <div class="bg-icon"><i class="fas fa-recycle"></i></div>
@@ -208,7 +213,7 @@
     <div class="main-panel">
       <div class="input-card">
         <h2><i class="fas fa-sliders-h"></i> 关键参数输入</h2>
-        <div class="param-slider"><label>掺烧比例 <span id="mixVal">8.2%</span></label><input type="range" id="mixSlider" min="0" max="15" value="8.2" step="0.1"></div>
+        <div class="param-slider"><label>掺烧比例 <span id="mixVal">8.2%</span></label><input type="range" id="mixSlider" min="0" max="10" value="8.2" step="0.1"></div>
         <div class="param-slider"><label>污泥含水率 <span id="moistVal">34%</span></label><input type="range" id="moistSlider" min="15" max="55" value="34" step="0.5"></div>
         <div class="param-slider"><label>入炉热值 <span id="heatVal">2950 kJ/kg</span></label><input type="range" id="heatSlider" min="1800" max="4200" value="2950" step="10"></div>
         <div class="extra-input">
@@ -224,7 +229,7 @@
           <div class="metric-box"><span class="value" id="preEff">91.3</span><span class="unit">g/kWh</span><div class="label">煤耗率</div></div>
           <div class="metric-box"><span class="value" id="preNOx">175</span><span class="unit">mg/m³</span><div class="label">NOx 排放</div></div>
           <div class="metric-box"><span class="value" id="preCO2">0.82</span><span class="unit">t/MWh</span><div class="label">单位碳排</div></div>
-          <div class="metric-box"><span class="value" id="preCost">236.5</span><span class="unit">元/吨</span><div class="label">运行成本</div></div>
+          <div class="metric-box"><span class="value" id="preCost">0.236</span><span class="unit">元/kWh</span><div class="label">单位供电成本</div></div>
         </div>
 
         <div class="weight-panel">
@@ -253,7 +258,13 @@
 
     <div class="charts-row">
       <div class="chart-card"><h3><i class="fas fa-wave-square" style="color:#1f6e4a;"></i> 污染物排放预测（随掺比变化）</h3><div id="pollChart" style="width:100%; height:240px;"></div></div>
-      <div class="chart-card"><h3><i class="fas fa-arrows-rotate" style="color:#1f6e4a;"></i> 多目标帕累托前沿（成本 vs 碳排放）</h3><div id="pareChart" style="width:100%; height:240px;"></div></div>
+      <div class="chart-card"><h3><i class="fas fa-arrows-rotate" style="color:#1f6e4a;"></i> 多目标帕累托前沿（单位供电成本 vs 碳排放）</h3><div id="pareChart" style="width:100%; height:240px;"></div></div>
+    </div>
+
+    <div class="charts-row charts-row-3">
+      <div class="chart-card"><h3><i class="fas fa-cloud" style="color:#1f6e4a;"></i> 碳排放预测（随掺比变化）</h3><div id="carbonChart" style="width:100%; height:240px;"></div></div>
+      <div class="chart-card"><h3><i class="fas fa-bolt" style="color:#1f6e4a;"></i> 能耗预测（随掺比变化）</h3><div id="energyChart" style="width:100%; height:240px;"></div></div>
+      <div class="chart-card"><h3><i class="fas fa-yen-sign" style="color:#1f6e4a;"></i> 单位供电成本预测（随掺比变化）</h3><div id="costChart" style="width:100%; height:240px;"></div></div>
     </div>
 
     <div class="chart-card" id="batchResultsCard" style="margin-top:20px; display:none;">
@@ -323,7 +334,46 @@
       const weightEffVal = document.getElementById('weightEffVal');
       const weightSumSpan = document.getElementById('weightSum');
       const csvUploadInput = document.getElementById('csvUpload');
-      let pollChart, pareChart;
+      let pollChart, pareChart, carbonChart, energyChart, costChart;
+      let predictionRequestSeq = 0;
+      let latestCurveData = null;
+      let resizeTimer = null;
+
+      function hasNonNullSeriesData(series) {
+        return Array.isArray(series) && series.some(v => v !== null && v !== undefined && Number.isFinite(Number(v)));
+      }
+
+      function buildLinePairs(mixRatios, values, dropNull = false) {
+        const ratios = Array.isArray(mixRatios) ? mixRatios : [];
+        const vals = Array.isArray(values) ? values : [];
+        const len = Math.min(ratios.length, vals.length);
+        const pairs = [];
+
+        for (let i = 0; i < len; i++) {
+          const x = safeNumber(ratios[i], null);
+          const yRaw = vals[i];
+          const y = (yRaw === null || yRaw === undefined || yRaw === '') ? null : safeNumber(yRaw, null);
+
+          if (x === null || x === undefined || Number.isNaN(x)) continue;
+          if (dropNull && (y === null || y === undefined || Number.isNaN(y))) continue;
+          pairs.push([x, y]);
+        }
+
+        return pairs;
+      }
+
+      function buildValueXAxis() {
+        return {
+          type: 'value',
+          min: 0,
+          max: 10,
+          scale: false,
+          interval: 2,
+          name: '掺烧比例',
+          boundaryGap: [0, 0],
+          axisLabel: { formatter: value => `${safeNumber(value, 0).toFixed(1)}%` }
+        };
+      }
 
       // =========================
       // PSO-BP 对接辅助函数（不改变原接口）
@@ -375,7 +425,7 @@
           ),
           operating_cost: safeNumber(
             result.operating_cost ?? result.prediction?.operating_cost,
-            236.5
+            0.2365
           ),
           recommended_ratio: safeNumber(
             result.recommended_ratio ?? result.prediction?.recommended_ratio,
@@ -401,7 +451,7 @@
               temp: safeNumber(x[1], 850),
               coal_rate: safeNumber(f[0], 91.3),
               carbon: safeNumber(f[1], 0.82),
-              cost: safeNumber(f[2], 236.5)
+              cost: safeNumber(f[2], 0.2365)
             });
           }
         } else if (Array.isArray(result.solutions)) {
@@ -411,7 +461,7 @@
               temp: safeNumber(item.temp, 850),
               coal_rate: safeNumber(item.coal_rate, 91.3),
               carbon: safeNumber(item.carbon, 0.82),
-              cost: safeNumber(item.cost, 236.5)
+              cost: safeNumber(item.cost, 0.2365)
             });
           });
         }
@@ -434,16 +484,22 @@
       function generateMockPareto() {
         const moisture = safeNumber(moistSlider.value, 34);
         const heatIn = safeNumber(heatSlider.value, 2950);
-        const temp = safeNumber(tempSlider.value, 850);
+        const baseTemp = safeNumber(tempSlider.value, 850);
         const solutions = [];
 
         for (let i = 0; i < 30; i++) {
-          const mix = 5 + Math.random() * 10;
-          const t = 800 + Math.random() * 150;
-          const coal = 310 + 0.8 * mix + 0.2 * (moisture - 30) - 0.01 * (heatIn - 2800) + Math.random() * 5;
-          const carbon = 0.75 + 0.008 * mix + 0.003 * (moisture - 30) - 0.0001 * (heatIn - 2800) + Math.random() * 0.05;
-          const cost = 220 + 1.5 * mix + 0.6 * (moisture - 30) - 0.03 * (heatIn - 2800) + Math.random() * 10;
-          solutions.push({ mix, temp: Math.max(780, Math.min(980, t || temp)), coal_rate: coal, carbon, cost });
+          const mix = Math.random() * 10.0;
+          const temp = 800 + Math.random() * 150;
+          const coal = 88 + 0.45 * mix + 0.10 * (moisture - 34) - 0.0015 * (heatIn - 2950) - 0.02 * (temp - baseTemp) + Math.random() * 1.2;
+          const carbon = 0.76 + 0.006 * mix + 0.0012 * (moisture - 34) - 0.00003 * (heatIn - 2950) - 0.0002 * (temp - baseTemp) + Math.random() * 0.008;
+          const cost = 0.205 + 0.0026 * mix + 0.0005 * (moisture - 34) - 0.000005 * (heatIn - 2950) - 0.00003 * (temp - baseTemp) + Math.random() * 0.006;
+          solutions.push({
+            mix,
+            temp: Math.max(800, Math.min(950, temp)),
+            coal_rate: Math.max(70, coal),
+            carbon: Math.max(0.55, carbon),
+            cost: Math.max(0.05, cost)
+          });
         }
 
         solutions.sort((a, b) => a.cost - b.cost);
@@ -498,19 +554,177 @@
         }
       }
 
-      function fallbackSimulation() {
-        preEff.innerText = '91.3';
-        preNOx.innerText = '175';
-        preCO2.innerText = '0.82';
-        preCost.innerText = '236.5';
-        optRatio.innerText = '8.2%';
-        optTemp.innerText = '850℃';
+      function buildMixAxis() {
+        const min = safeNumber(mixSlider.min, 0);
+        const max = safeNumber(mixSlider.max, 10);
+        const step = (max - min) / 5;
+        return Array.from({ length: 6 }, (_, idx) => Number((min + step * idx).toFixed(1)));
+      }
+
+      function computeMockPrediction(params) {
+        const mix = safeNumber(params.mix_ratio, 8.2);
+        const moisture = safeNumber(params.moisture, 34);
+        const heat = safeNumber(params.heat_value, 2950);
+        const temp = safeNumber(params.temp_furnace, 850);
+        const volatile = safeNumber(params.volatile, 38);
+        const ash = safeNumber(params.ash, 32);
+
+        const coal = 91.3 + 0.42 * (mix - 8.2) + 0.08 * (moisture - 34) - 0.0016 * (heat - 2950) - 0.02 * (temp - 850) + 0.03 * (ash - 32);
+        const nox = 175 + 2.8 * (mix - 8.2) + 0.45 * (moisture - 34) - 0.009 * (heat - 2950) - 0.14 * (temp - 850) - 0.12 * (volatile - 38) + 0.16 * (ash - 32);
+        const carbon = 0.82 + 0.0055 * (mix - 8.2) + 0.0012 * (moisture - 34) - 0.00003 * (heat - 2950) - 0.00022 * (temp - 850);
+        const cost = 0.236 + 0.0026 * (mix - 8.2) + 0.00045 * (moisture - 34) - 0.000005 * (heat - 2950) - 0.00003 * (temp - 850);
+
+        return {
+          coal_consumption: Math.max(70, coal),
+          nox_emission: Math.max(20, nox),
+          carbon_emission: Math.max(0.55, carbon),
+          operating_cost: Math.max(0.05, cost),
+          recommended_ratio: mix,
+          recommended_temp: temp
+        };
+      }
+
+      function generateMockCurveData(params, prediction) {
+        const mixAxis = buildMixAxis();
+        const moisture = safeNumber(params.moisture, 34);
+        const heat = safeNumber(params.heat_value, 2950);
+        const temp = safeNumber(params.temp_furnace, 850);
+        const volatile = safeNumber(params.volatile, 38);
+        const ash = safeNumber(params.ash, 32);
+        const currentMix = safeNumber(params.mix_ratio, 8.2);
+        const mixSlope = 2.8 + 0.015 * (moisture - 34) - 0.0008 * ((heat - 2950) / 10) - 0.005 * (temp - 850) + 0.02 * (ash - 32) - 0.015 * (volatile - 38);
+
+        return {
+          mix_ratios: mixAxis,
+          nox_emission_series: mixAxis.map(mix => Math.max(20, prediction.nox_emission + mixSlope * (mix - currentMix))),
+          carbon_emission_series: mixAxis.map(mix => Math.max(0.55, prediction.carbon_emission + 0.0055 * (mix - currentMix))),
+          coal_consumption_series: mixAxis.map(mix => Math.max(70, prediction.coal_consumption + 0.42 * (mix - currentMix))),
+          operating_cost_series: mixAxis.map(mix => Math.max(0.05, prediction.operating_cost + 0.0026 * (mix - currentMix)))
+        };
+      }
+
+      function applyCurveDataToCharts(curveData) {
+        if (!curveData) return;
+        latestCurveData = curveData;
+
+        const mixRatios = Array.isArray(curveData.mix_ratios)
+          ? curveData.mix_ratios.map(v => safeNumber(v, 0))
+          : [];
+        const noxSeries = (curveData.nox_emission_series || []).map(v => safeNumber(v, 0));
+        const carbonSeries = (curveData.carbon_emission_series || []).map(v => safeNumber(v, 0));
+        const coalSeries = (curveData.coal_consumption_series || []).map(v => safeNumber(v, 0));
+        const costSeries = (curveData.operating_cost_series || []).map(v => safeNumber(v, 0));
+
+        const actualNoxSeries = Array.isArray(curveData.actual_nox_series)
+          ? curveData.actual_nox_series.map(v => (v === null || v === undefined || v === '' ? null : safeNumber(v, null)))
+          : [];
+        const actualCarbonSeries = Array.isArray(curveData.actual_carbon_series)
+          ? curveData.actual_carbon_series.map(v => (v === null || v === undefined || v === '' ? null : safeNumber(v, null)))
+          : [];
+        const actualCoalSeries = Array.isArray(curveData.actual_coal_series)
+          ? curveData.actual_coal_series.map(v => (v === null || v === undefined || v === '' ? null : safeNumber(v, null)))
+          : [];
+        const actualCostSeries = Array.isArray(curveData.actual_cost_series)
+          ? curveData.actual_cost_series.map(v => (v === null || v === undefined || v === '' ? null : safeNumber(v, null)))
+          : [];
+
+        const hasActualNox = hasNonNullSeriesData(actualNoxSeries);
+        const hasActualCarbon = hasNonNullSeriesData(actualCarbonSeries);
+        const hasActualCoal = hasNonNullSeriesData(actualCoalSeries);
+        const hasActualCost = hasNonNullSeriesData(actualCostSeries);
+
+        const predictedNoxPairs = buildLinePairs(mixRatios, noxSeries, false);
+        const predictedCarbonPairs = buildLinePairs(mixRatios, carbonSeries, false);
+        const predictedCoalPairs = buildLinePairs(mixRatios, coalSeries, false);
+        const predictedCostPairs = buildLinePairs(mixRatios, costSeries, false);
+        const actualNoxPairs = buildLinePairs(mixRatios, actualNoxSeries, true);
+        const actualCarbonPairs = buildLinePairs(mixRatios, actualCarbonSeries, true);
+        const actualCoalPairs = buildLinePairs(mixRatios, actualCoalSeries, true);
+        const actualCostPairs = buildLinePairs(mixRatios, actualCostSeries, true);
+
+        if (pollChart) {
+          pollChart.setOption({
+            tooltip: { trigger: 'axis' },
+            legend: { bottom: 5, data: hasActualNox ? ['NOx 预测', 'NOx 实际'] : ['NOx 预测'] },
+            grid: { left: '12%', right: '8%', top: '15%', bottom: '20%', containLabel: true },
+            xAxis: buildValueXAxis(),
+            yAxis: { type: 'value', name: 'NOx 浓度 (mg/m³)' },
+            series: [
+              { name: 'NOx 预测', type: 'line', data: predictedNoxPairs, color: '#2f855a', smooth: false, connectNulls: false, lineStyle: { width: 3 }, symbolSize: 8 },
+              ...(hasActualNox ? [{ name: 'NOx 实际', type: 'line', data: actualNoxPairs, color: '#14532d', smooth: false, connectNulls: true, lineStyle: { width: 3, type: 'dashed' }, symbolSize: 7 }] : [])
+            ]
+          }, true);
+        }
+
+        if (carbonChart) {
+          carbonChart.setOption({
+            tooltip: { trigger: 'axis' },
+            legend: { bottom: 5, data: hasActualCarbon ? ['碳排放预测', '碳排放实际'] : ['碳排放预测'] },
+            grid: { left: '12%', right: '8%', top: '15%', bottom: '20%', containLabel: true },
+            xAxis: buildValueXAxis(),
+            yAxis: { type: 'value', name: '单位碳排放 (tCO₂/MWh)' },
+            series: [
+              { name: '碳排放预测', type: 'line', data: predictedCarbonPairs, color: '#4da1cf', smooth: false, connectNulls: false, lineStyle: { width: 3 }, symbolSize: 8 },
+              ...(hasActualCarbon ? [{ name: '碳排放实际', type: 'line', data: actualCarbonPairs, color: '#1d4ed8', smooth: false, connectNulls: true, lineStyle: { width: 3, type: 'dashed' }, symbolSize: 7 }] : [])
+            ]
+          }, true);
+        }
+
+        if (energyChart) {
+          energyChart.setOption({
+            tooltip: { trigger: 'axis' },
+            legend: { bottom: 5, data: hasActualCoal ? ['能耗预测', '能耗实际'] : ['能耗预测'] },
+            grid: { left: '12%', right: '8%', top: '15%', bottom: '20%', containLabel: true },
+            xAxis: buildValueXAxis(),
+            yAxis: { type: 'value', name: '煤耗率 (g/kWh)' },
+            series: [
+              { name: '能耗预测', type: 'line', data: predictedCoalPairs, color: '#e67e22', smooth: false, connectNulls: false, lineStyle: { width: 3 }, symbolSize: 8 },
+              ...(hasActualCoal ? [{ name: '能耗实际', type: 'line', data: actualCoalPairs, color: '#b45309', smooth: false, connectNulls: true, lineStyle: { width: 3, type: 'dashed' }, symbolSize: 7 }] : [])
+            ]
+          }, true);
+        }
+
+        if (costChart) {
+          costChart.setOption({
+            tooltip: { trigger: 'axis' },
+            legend: { bottom: 5, data: hasActualCost ? ['成本预测', '成本实际'] : ['成本预测'] },
+            grid: { left: '12%', right: '8%', top: '15%', bottom: '20%', containLabel: true },
+            xAxis: buildValueXAxis(),
+            yAxis: { type: 'value', name: '单位供电成本 (元/kWh)' },
+            series: [
+              { name: '成本预测', type: 'line', data: predictedCostPairs, color: '#9b59b6', smooth: false, connectNulls: false, lineStyle: { width: 3 }, symbolSize: 8 },
+              ...(hasActualCost ? [{ name: '成本实际', type: 'line', data: actualCostPairs, color: '#6d28d9', smooth: false, connectNulls: true, lineStyle: { width: 3, type: 'dashed' }, symbolSize: 7 }] : [])
+            ]
+          }, true);
+        }
+      }
+
+      async function fetchAndUpdateCurveCharts(params, requestId) {
+        try {
+          const response = await fetch(`${BACKEND_URL}/predict_charts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(params)
+          });
+          const result = await response.json();
+          if (requestId !== predictionRequestSeq) return true;
+          if (result.success) {
+            applyCurveDataToCharts(result);
+            return true;
+          }
+          console.warn('曲线预测错误:', result);
+          return false;
+        } catch (error) {
+          console.warn('曲线预测请求失败:', error);
+          return false;
+        }
       }
 
       // =========================
       // 实时预测：已切换为 PSO-BP 对接写法
       // =========================
       async function updatePredictions() {
+        const requestId = ++predictionRequestSeq;
         mixVal.innerText = mixSlider.value + '%';
         moistVal.innerText = moistSlider.value + '%';
         heatVal.innerText = heatSlider.value + ' kJ/kg';
@@ -527,19 +741,31 @@
             });
 
             const result = await response.json();
+            if (requestId !== predictionRequestSeq) return;
             if (result.success) {
               const prediction = normalizePredictResult(result, params);
               applyPredictionToUI(prediction);
+
+              if (requestId !== predictionRequestSeq) return;
+              const curveOk = await fetchAndUpdateCurveCharts(params, requestId);
+              if (requestId !== predictionRequestSeq) return;
+              if (curveOk) return;
+
+              applyCurveDataToCharts(generateMockCurveData(params, prediction));
               return;
+            } else {
+              console.warn('后端预测错误:', result);
             }
-            console.warn('后端预测错误:', result);
           } catch (err) {
             console.warn('预测请求失败，切换到模拟模式:', err);
             usingMockData = true;
           }
         }
 
-        fallbackSimulation();
+        const mockPrediction = computeMockPrediction(params);
+        if (requestId !== predictionRequestSeq) return;
+        applyPredictionToUI(mockPrediction);
+        applyCurveDataToCharts(generateMockCurveData(params, mockPrediction));
       }
 
       function updateWeightDisplay() {
@@ -563,12 +789,13 @@
       function updateParetoChart() {
         if (!pareChart || !paretoSolutions.length) return;
 
-        const data = paretoSolutions.map(p => [p.cost, p.carbon]);
+        const scatterData = paretoSolutions.map(p => [p.cost, p.carbon]);
+        const frontierLine = [...scatterData].sort((a, b) => a[0] - b[0]);
         const best = selectBestByWeights();
         const highlightData = best ? [[best.cost, best.carbon]] : [];
 
-        const allCosts = data.map(d => d[0]);
-        const allCarbons = data.map(d => d[1]);
+        const allCosts = scatterData.map(d => d[0]);
+        const allCarbons = scatterData.map(d => d[1]);
         if (best) {
           allCosts.push(best.cost);
           allCarbons.push(best.carbon);
@@ -582,11 +809,22 @@
         const carbonRange = maxCarbon - minCarbon;
 
         pareChart.setOption({
-          tooltip: { trigger: 'item', formatter: '成本: {c[0]} 元/kWh<br>碳排放: {c[1]} tCO₂/MWh' },
-          grid: { left: '12%', right: '8%', top: '10%', bottom: '15%', containLabel: true },
+          tooltip: {
+            trigger: 'item',
+            formatter: function(params) {
+              if (params.seriesName === '帕累托解') {
+                const solution = paretoSolutions[params.dataIndex];
+                if (!solution) return '';
+                return `掺烧比: ${solution.mix.toFixed(1)}%<br>炉膛温度: ${solution.temp.toFixed(0)}℃<br>单位供电成本: ${solution.cost.toFixed(4)} 元/kWh<br>单位碳排放: ${solution.carbon.toFixed(4)} tCO₂/MWh`;
+              }
+              return `单位供电成本: ${safeNumber(params.value?.[0], 0).toFixed(4)} 元/kWh<br>单位碳排放: ${safeNumber(params.value?.[1], 0).toFixed(4)} tCO₂/MWh`;
+            }
+          },
+          legend: { bottom: 5, data: ['帕累托前沿', '帕累托解', '推荐解'] },
+          grid: { left: '12%', right: '8%', top: '10%', bottom: '20%', containLabel: true },
           xAxis: {
             type: 'value',
-            name: '运行成本 (元/kWh)',
+            name: '单位供电成本 (元/kWh)',
             min: minCost - 0.1 * (costRange || 1),
             max: maxCost + 0.1 * (costRange || 1),
             splitLine: { show: true, lineStyle: { color: '#ddd', type: 'dashed' } }
@@ -600,11 +838,19 @@
           },
           series: [
             {
+              name: '帕累托前沿',
+              type: 'line',
+              data: frontierLine,
+              smooth: false,
+              showSymbol: false,
+              lineStyle: { color: '#7fbf9f', width: 2 }
+            },
+            {
               name: '帕累托解',
               type: 'scatter',
-              data,
+              data: scatterData,
               symbolSize: 10,
-              itemStyle: { color: '#2f855a', opacity: 0.7, borderColor: '#fff', borderWidth: 1 }
+              itemStyle: { color: '#2f855a', opacity: 0.82, borderColor: '#fff', borderWidth: 1 }
             },
             {
               name: '推荐解',
@@ -617,18 +863,39 @@
         }, true);
       }
 
+      function resizeAllCharts() {
+        if (resizeTimer) clearTimeout(resizeTimer);
+
+        const doResize = () => {
+          const charts = [pollChart, pareChart, carbonChart, energyChart, costChart];
+          charts.forEach(chart => {
+            if (chart && !chart.isDisposed()) {
+              chart.resize({
+                width: chart.getDom().clientWidth,
+                height: chart.getDom().clientHeight
+              });
+            }
+          });
+
+          if (latestCurveData) applyCurveDataToCharts(latestCurveData);
+          if (paretoSolutions && paretoSolutions.length) updateParetoChart();
+        };
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(doResize);
+        });
+
+        resizeTimer = setTimeout(doResize, 180);
+      }
+
       function initCharts() {
         pollChart = echarts.init(document.getElementById('pollChart'));
         pareChart = echarts.init(document.getElementById('pareChart'));
+        carbonChart = echarts.init(document.getElementById('carbonChart'));
+        energyChart = echarts.init(document.getElementById('energyChart'));
+        costChart = echarts.init(document.getElementById('costChart'));
 
-        pollChart.setOption({
-          tooltip: { trigger: 'axis' },
-          legend: { bottom: 5, data: ['NOx'] },
-          grid: { left: '12%', right: '8%', top: '15%', bottom: '20%', containLabel: true },
-          xAxis: { type: 'category', data: ['0%', '4%', '8%', '12%', '16%', '20%'], name: '掺烧比例' },
-          yAxis: { type: 'value', name: 'NOx 浓度 (mg/m³)', min: 0, max: 250 },
-          series: [{ name: 'NOx', type: 'line', data: [160, 168, 175, 186, 198, 215], color: '#2f855a', smooth: true, lineStyle: { width: 3 }, symbolSize: 8 }]
-        });
+        applyCurveDataToCharts(generateMockCurveData(getCurrentParams(), computeMockPrediction(getCurrentParams())));
 
         pareChart.on('click', function(params) {
           if (params.componentType === 'series' && params.dataIndex !== undefined && params.seriesName === '帕累托解') {
@@ -652,7 +919,7 @@
             <tr><td>炉膛温度</td><td>${solution.temp.toFixed(0)}℃</td></tr>
             <tr><td>煤耗率</td><td>${solution.coal_rate.toFixed(2)} g/kWh</td></tr>
             <tr><td>碳排放</td><td>${solution.carbon.toFixed(4)} tCO₂/MWh</td></tr>
-            <tr><td>运行成本</td><td>${solution.cost.toFixed(4)} 元/kWh</td></tr>
+            <tr><td>单位供电成本</td><td>${solution.cost.toFixed(4)} 元/kWh</td></tr>
           </table>
         `;
         modal.classList.add('show');
@@ -758,7 +1025,7 @@
               table.innerHTML = `
                 <tr><td>算法</td><td>PSO-BP（粒子群优化 BP 神经网络）</td></tr>
                 <tr><td>接口模式</td><td>/predict 保持原 JSON 字段不变</td></tr>
-                <tr><td>特征数量</td><td>6 个核心工艺参数</td></tr>
+                <tr><td>特征数量</td><td>9 个输入特征</td></tr>
               `;
             } else if (module === 'optimize') {
               title = '多目标优化详情';
@@ -774,7 +1041,7 @@
               table.innerHTML = `
                 <tr><td>优化算法</td><td>NSGA-II</td></tr>
                 <tr><td>种群大小</td><td>100</td></tr>
-                <tr><td>迭代次数</td><td>200</td></tr>
+                <tr><td>迭代次数</td><td>100</td></tr>
                 <tr><td>帕累托解个数</td><td>${paretoSolutions.length}</td></tr>
               `;
             } else if (module === 'visual') {
@@ -795,7 +1062,7 @@
               table.innerHTML = `
                 <tr><td>当前推荐掺烧比</td><td>${optRatio.innerText}</td></tr>
                 <tr><td>预期减碳</td><td>2.4 万吨/年</td></tr>
-                <tr><td>综合成本</td><td>${preCost.innerText} 元/吨</td></tr>
+                <tr><td>综合成本</td><td>${preCost.innerText} 元/kWh</td></tr>
               `;
             }
           };
@@ -957,6 +1224,9 @@
                 updateDisplayFromWeight();
               }
             }
+
+            updatePredictions();
+            setTimeout(resizeAllCharts, 100);
           } else {
             usingMockData = true;
             console.warn('后端响应异常，使用模拟数据');
@@ -964,6 +1234,7 @@
         } catch (e) {
           usingMockData = true;
           console.warn('后端不可用，使用模拟数据', e);
+          setTimeout(resizeAllCharts, 100);
         }
       }
 
@@ -974,9 +1245,21 @@
         enterBtn.addEventListener('click', () => {
           cover.classList.add('hidden');
           dashboard.classList.add('visible');
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              resizeAllCharts();
+            });
+          });
+          setTimeout(resizeAllCharts, 300);
         });
       } else {
         console.warn('封面元素未找到');
+      }
+
+      window.addEventListener('resize', resizeAllCharts);
+      window.addEventListener('fullscreenchange', resizeAllCharts);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', resizeAllCharts);
       }
 
       initCharts();
@@ -985,5 +1268,11 @@
     })();
   </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
-</body>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script src="/Static/js/jquery.js"></script><script src="/Static/js/Global.js"></script><script src="/Web/js/Global.js"></script><script src="/Web/js/XYChatGPT.js"></script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script src="/Static/js/jquery.js"></script><script src="/Static/js/Global.js"></script><script src="/Web/js/Global.js"></script><script src="/Web/js/XYChatGPT.js"></script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script src="/Static/js/jquery.js"></script><script src="/Static/js/Global.js"></script><script src="/Web/js/Global.js"></script><script src="/Web/js/XYChatGPT.js"></script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script src="/Static/js/jquery.js"></script><script src="/Static/js/Global.js"></script><script src="/Web/js/Global.js"></script><script src="/Web/js/XYChatGPT.js"></script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script src="/Static/js/jquery.js"></script><script src="/Static/js/Global.js"></script><script src="/Web/js/Global.js"></script><script src="/Web/js/XYChatGPT.js"></script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script src="/Static/js/jquery.js"></script><script src="/Static/js/Global.js"></script><script src="/Web/js/Global.js"></script><script src="/Web/js/XYChatGPT.js"></script></body>
 </html>
